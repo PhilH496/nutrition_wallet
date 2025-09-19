@@ -1,0 +1,23 @@
+# Central .gitignore for nutrition_wallet
+
+# frontend dependencies
+frontend/node_modules/
+frontend/.next/
+
+## env files
+frontend/.env
+frontend/.env.*
+
+## misc
+frontend/.DS_Store
+frontend/*.pem
+
+## typeScript
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# backend dependencies
+backend/.venv/
+backend/env/
+backend/__pycache__/
+backend/app/__pycache__
