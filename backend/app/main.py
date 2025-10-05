@@ -5,6 +5,7 @@ from app.routers import auth
 app = FastAPI()
 
 # CORS
+#Info: "https://yourapp.vercel.app" - our deployed frontend URL for PRODUCTION; right now only LOCAL dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
