@@ -14,7 +14,7 @@ class SignInRequest(BaseModel):
     password: str
 
 @router.post("/signup")
-async def signup(data: SignUpRequest):
+async def sign_up(data: SignUpRequest):
     # Validate inputs
     if len(data.password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
@@ -62,7 +62,7 @@ async def signup(data: SignUpRequest):
             raise HTTPException(status_code=400, detail="Signup failed. Please try again")
 
 @router.post("/signin")
-async def signin(data: SignInRequest):
+async def sign_in(data: SignInRequest):
     try:
         auth_response = supabase.auth.sign_in_with_password({
             "email": data.email,
