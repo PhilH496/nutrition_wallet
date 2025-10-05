@@ -15,11 +15,14 @@ Windows Powershell:
 
    cd frontend
 
-2. Install dependencies:
+2. Copy .env.local file from discord and paste (rename to .env.local if downloads as env.local)
+
+
+3. Install dependencies:
 
    npm install
 
-3. Run the dev server:
+4. Run the dev server:
 
    npm run dev
 
@@ -31,15 +34,17 @@ Windows PowerShell:
 
    cd backend
 
-2. Create a virtual environment and activate it:
+2. Copy .env file from discord and paste (rename to .env if downloads as env)
+
+3. Create a virtual environment and activate it:
 
    python -m venv .venv 
    .\.venv\Scripts\Activate.ps1
 
-3. Install dependencies:
+4. Install dependencies:
 
    pip install fastapi uvicorn[standard]
 
-4. Run the development server:
+5. Run the development server:
 
    uvicorn app.main:app --reload --port 8000
