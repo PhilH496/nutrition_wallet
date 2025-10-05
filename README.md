@@ -43,7 +43,7 @@ Windows PowerShell:
 
 4. Install dependencies:
 
-   pip install fastapi uvicorn[standard]
+   pip install -r requirements.txt
 
 5. Run the development server:
 
