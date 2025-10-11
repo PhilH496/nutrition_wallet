@@ -20,10 +20,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
+      // Store token in localStorage for API calls
+      if (session?.access_token) {
+        localStorage.setItem('token', session.access_token)
+      }
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      // Update token in localStorage whenever auth state changes
+      if (session?.access_token) {
+        localStorage.setItem('token', session.access_token)
+      } else {
+        localStorage.removeItem('token')
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -45,13 +55,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+    
+    // Store the access token
+    if (data.session?.access_token) {
+      localStorage.setItem('token', data.session.access_token)
+    }
   }
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
+    
+    // Clear token from localStorage
+    localStorage.removeItem('token')
   }
 
   return (

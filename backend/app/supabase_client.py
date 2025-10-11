@@ -1,7 +1,8 @@
 from supabase import create_client, Client
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.config import settings
+import jwt
 
 supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
 
@@ -16,13 +17,37 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     try:
         token = credentials.credentials
         
-        # Verify the token with Supabase
-        user = supabase.auth.get_user(token)
+        # Decode the JWT to get user info
+        # Use Supabase JWT secret to verify
+        payload = jwt.decode(
+            token, 
+            settings.supabase_jwt_secret, 
+            algorithms=["HS256"],
+            audience="authenticated"
+        )
         
-        if not user:
-            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        user_id = payload.get("sub")
         
-        return user.user
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials"
+            )
         
+        return {"id": user_id, "email": payload.get("email")}
+        
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired"
+        )
+    except jwt.InvalidTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token: {str(e)}"
+        )
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Could not validate credentials: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Could not validate credentials: {str(e)}"
+        )
