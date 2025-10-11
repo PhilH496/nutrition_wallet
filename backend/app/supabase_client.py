@@ -4,7 +4,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.config import settings
 import jwt
 
-supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
+# Uses anon key for client operations (respects RLS)
+supabase: Client = create_client(settings.supabase_url, settings.supabase_anon_key)
 
 # Security scheme for JWT token
 security = HTTPBearer()
@@ -18,7 +19,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         token = credentials.credentials
         
         # Decode the JWT to get user info
-        # Use Supabase JWT secret to verify
+
         payload = jwt.decode(
             token, 
             settings.supabase_jwt_secret, 

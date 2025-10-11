@@ -48,21 +48,22 @@ CREATE TABLE IF NOT EXISTS public.foods (
 ALTER TABLE public.foods ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: Users can only access their own foods
-CREATE POLICY "Users can view own foods" 
+CREATE POLICY "Enable read access for users" 
     ON public.foods FOR SELECT 
-    USING (auth.uid() = user_id);
+    USING (user_id = auth.uid());
 
-CREATE POLICY "Users can insert own foods" 
+CREATE POLICY "Enable insert for users" 
     ON public.foods FOR INSERT 
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can update own foods" 
+CREATE POLICY "Enable update for users" 
     ON public.foods FOR UPDATE 
-    USING (auth.uid() = user_id);
+    USING (user_id = auth.uid())
+    WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can delete own foods" 
+CREATE POLICY "Enable delete for users" 
     ON public.foods FOR DELETE 
-    USING (auth.uid() = user_id);
+    USING (user_id = auth.uid());
 
 -- Indexes for faster queries
 CREATE INDEX IF NOT EXISTS idx_foods_user_id ON public.foods(user_id);

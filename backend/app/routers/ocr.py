@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi.security import HTTPAuthorizationCredentials
 from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
 from msrest.authentication import CognitiveServicesCredentials
@@ -7,7 +8,7 @@ import time
 import re
 import io
 from ..config import settings
-from ..supabase_client import get_current_user
+from ..supabase_client import get_current_user, security
 
 router = APIRouter(prefix="/ocr", tags=["ocr"])
 
@@ -136,7 +137,8 @@ async def scan_nutrition_label(
 @router.post("/save-food")
 async def save_food_to_database(
     nutrition_data: Dict[str, Any],
-    user = Depends(get_current_user)
+    user = Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """
     Save parsed nutrition data to Supabase database
@@ -144,14 +146,29 @@ async def save_food_to_database(
     try:
         from ..supabase_client import supabase
         
+        # Get the user's JWT token
+        token = credentials.credentials
+        
+        # Set the user context for this request
+        supabase.postgrest.auth(token)
+        
+        print("=" * 50)
+        print(f"DEBUG: User ID: {user['id']}")
+        print(f"DEBUG: Nutrition data: {nutrition_data}")
+        
         # Add user_id to the data
         food_data = {
             "user_id": user["id"],
             **nutrition_data
         }
         
-        # Insert into Supabase
+        print(f"DEBUG: Food data to insert: {food_data}")
+        
+        # Insert into Supabase with user context
         result = supabase.table("foods").insert(food_data).execute()
+        
+        print(f"DEBUG: Insert successful!")
+        print("=" * 50)
         
         return {
             "success": True,
@@ -160,4 +177,7 @@ async def save_food_to_database(
         }
         
     except Exception as e:
+        print(f"ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error saving to database: {str(e)}")
