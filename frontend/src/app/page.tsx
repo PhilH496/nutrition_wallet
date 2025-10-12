@@ -15,7 +15,7 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && user) {  // Wait for loading to finish
+    if (!loading && user) {  
       router.push('/dashboard')
     }
   }, [user, loading, router])
@@ -45,7 +45,7 @@ export default function Home() {
       }
       // Navigation handled by useEffect
     } catch (err: any) {
-      // Parse error messages
+
       let errorMessage = 'Authentication failed'
       
       if (err.message?.includes('duplicate key')) {

@@ -12,15 +12,12 @@ from ..supabase_client import get_current_user, security
 
 router = APIRouter(prefix="/ocr", tags=["ocr"])
 
-# Initialize Azure Computer Vision client
+# Initialize Azure Computer Vision client with credentials
 credentials = CognitiveServicesCredentials(settings.azure_vision_key)
 vision_client = ComputerVisionClient(settings.azure_vision_endpoint, credentials)
 
 
 def parse_nutrition_info(text: str) -> Dict[str, Any]:
-    """
-    Parse extracted text to find nutrition information
-    """
     nutrition_data = {
         "name": None,
         "serving_size": None,
@@ -36,10 +33,9 @@ def parse_nutrition_info(text: str) -> Dict[str, Any]:
         "protein": None
     }
     
-    # Convert to lowercase for easier matching
     text_lower = text.lower()
     
-    # Regex patterns for common nutrition label formats
+    # Regex patterns for common nutrition label formats (FDA standard)
     patterns = {
         "calories": r"calories[:\s]+(\d+)",
         "total_fat": r"total fat[:\s]+(\d+\.?\d*)g?",
@@ -54,12 +50,11 @@ def parse_nutrition_info(text: str) -> Dict[str, Any]:
         "serving_size": r"serving size[:\s]+([^\n]+)"
     }
     
-    # Extract values using regex
+    # Extract values using regex and convert to appropriate types
     for key, pattern in patterns.items():
         match = re.search(pattern, text_lower)
         if match:
             try:
-                # Try to convert to float for numeric values
                 if key != "serving_size" and key != "name":
                     nutrition_data[key] = float(match.group(1))
                 else:
@@ -76,24 +71,25 @@ async def scan_nutrition_label(
     user = Depends(get_current_user)
 ):
     """
-    Upload a nutrition label image and extract nutrition information using Azure Computer Vision
+    Upload a nutrition label image and extract nutrition information using Azure Computer Vision OCR.
+    Returns: JSON response with extracted nutrition data and confidence level
     """
     try:
-        # Read the image file
+        # Read uploaded image data
         image_data = await file.read()
         image_stream = io.BytesIO(image_data)
         
-        # Call Azure Computer Vision Read API (OCR)
+        # Send image to Azure Computer Vision Read API for OCR processing
         read_response = vision_client.read_in_stream(
             image=image_stream,
             raw=True
         )
         
-        # Get the operation location (URL with operation ID)
+        # Extract operation ID from response headers for polling
         read_operation_location = read_response.headers["Operation-Location"]
         operation_id = read_operation_location.split("/")[-1]
         
-        # Wait for the operation to complete (polling)
+        # Poll Azure API until OCR processing is complete (max 10 attempts)
         max_attempts = 10
         attempt = 0
         while attempt < max_attempts:
@@ -106,7 +102,7 @@ async def scan_nutrition_label(
         if attempt >= max_attempts:
             raise HTTPException(status_code=408, detail="OCR processing timeout")
         
-        # Extract text from the result
+        # Extract all text lines from OCR results
         extracted_text = ""
         if read_result.status == OperationStatusCodes.succeeded:
             for text_result in read_result.analyze_result.read_results:
@@ -115,10 +111,10 @@ async def scan_nutrition_label(
         else:
             raise HTTPException(status_code=500, detail="OCR processing failed")
         
-        # Parse nutrition information from extracted text
+        # Parse extracted text to identify nutrition values
         nutrition_info = parse_nutrition_info(extracted_text)
         
-        # Determine confidence based on how many fields were extracted
+        # Calculate confidence level based on number of fields successfully extracted
         fields_found = sum(1 for v in nutrition_info.values() if v is not None)
         confidence = "high" if fields_found >= 5 else "medium" if fields_found >= 3 else "low"
         
@@ -146,29 +142,18 @@ async def save_food_to_database(
     try:
         from ..supabase_client import supabase
         
-        # Get the user's JWT token
+        # Extract JWT token for Supabase authentication
         token = credentials.credentials
         
-        # Set the user context for this request
+        # Set user context for Supabase query (required for RLS policies)
         supabase.postgrest.auth(token)
         
-        print("=" * 50)
-        print(f"DEBUG: User ID: {user['id']}")
-        print(f"DEBUG: Nutrition data: {nutrition_data}")
-        
-        # Add user_id to the data
         food_data = {
             "user_id": user["id"],
             **nutrition_data
         }
         
-        print(f"DEBUG: Food data to insert: {food_data}")
-        
-        # Insert into Supabase with user context
         result = supabase.table("foods").insert(food_data).execute()
-        
-        print(f"DEBUG: Insert successful!")
-        print("=" * 50)
         
         return {
             "success": True,
@@ -177,7 +162,4 @@ async def save_food_to_database(
         }
         
     except Exception as e:
-        print(f"ERROR: {str(e)}")
-        import traceback
-        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error saving to database: {str(e)}")
