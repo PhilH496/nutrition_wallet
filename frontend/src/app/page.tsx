@@ -11,14 +11,14 @@ export default function Home() {
   const [username, setUsername] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const { signUp, signIn, user } = useAuth()
+  const { signUp, signIn, user, loading } = useAuth() 
   const router = useRouter()
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {  // Wait for loading to finish
       router.push('/dashboard')
     }
-  }, [user, router])
+  }, [user, loading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,7 +43,7 @@ export default function Home() {
       } else {
         await signIn(email, password)
       }
-      router.push('/dashboard')
+      // Navigation handled by useEffect
     } catch (err: any) {
       // Parse error messages
       let errorMessage = 'Authentication failed'
@@ -70,6 +70,16 @@ export default function Home() {
     }
   }
 
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    )
+  }
+
+  // Don't render login form if already logged in
   if (user) {
     return null
   }

@@ -44,7 +44,7 @@ export default function Dashboard() {
             </button>
 
             <button
-              onClick={() => alert('View Foods feature coming soon!')}
+              onClick={() => router.push('/dashboard/foods')}
               className="flex items-center justify-center gap-3 px-6 py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition shadow-sm"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
