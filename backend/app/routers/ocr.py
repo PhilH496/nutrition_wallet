@@ -19,18 +19,13 @@ vision_client = ComputerVisionClient(settings.azure_vision_endpoint, credentials
 
 def parse_nutrition_info(text: str) -> Dict[str, Any]:
     nutrition_data = {
-        "name": None,
+        "food_name": None,
         "serving_size": None,
+        "serving_unit": None,
         "calories": None,
-        "total_fat": None,
-        "saturated_fat": None,
-        "trans_fat": None,
-        "cholesterol": None,
-        "sodium": None,
-        "total_carbs": None,
-        "fiber": None,
-        "sugar": None,
-        "protein": None
+        "protein": None,
+        "carbs": None,
+        "sugars": None
     }
     
     text_lower = text.lower()
@@ -38,16 +33,11 @@ def parse_nutrition_info(text: str) -> Dict[str, Any]:
     # Regex patterns for common nutrition label formats (FDA standard)
     patterns = {
         "calories": r"calories[:\s]+(\d+)",
-        "total_fat": r"total fat[:\s]+(\d+\.?\d*)g?",
-        "saturated_fat": r"saturated fat[:\s]+(\d+\.?\d*)g?",
-        "trans_fat": r"trans fat[:\s]+(\d+\.?\d*)g?",
-        "cholesterol": r"cholesterol[:\s]+(\d+\.?\d*)mg?",
-        "sodium": r"sodium[:\s]+(\d+\.?\d*)mg?",
-        "total_carbs": r"total carbohydrate[s]?[:\s]+(\d+\.?\d*)g?",
-        "fiber": r"dietary fiber[:\s]+(\d+\.?\d*)g?",
-        "sugar": r"(?:total )?sugars?[:\s]+(\d+\.?\d*)g?",
         "protein": r"protein[:\s]+(\d+\.?\d*)g?",
-        "serving_size": r"serving size[:\s]+([^\n]+)"
+        "carbs": r"total carbohydrate[s]?[:\s]+(\d+\.?\d*)g?",
+        "sugars": r"(?:total )?sugars?[:\s]+(\d+\.?\d*)g?",
+        "serving_size": r"serving size[:\s]+(\d+\.?\d*)",
+        "serving_unit": r"serving size[:\s]+\d+\.?\d*\s*([a-z]+)"
     }
     
     # Extract values using regex and convert to appropriate types
@@ -55,7 +45,7 @@ def parse_nutrition_info(text: str) -> Dict[str, Any]:
         match = re.search(pattern, text_lower)
         if match:
             try:
-                if key != "serving_size" and key != "name":
+                if key in ["serving_size", "calories", "protein", "carbs", "sugars"]:
                     nutrition_data[key] = float(match.group(1))
                 else:
                     nutrition_data[key] = match.group(1).strip()
@@ -111,12 +101,11 @@ async def scan_nutrition_label(
         else:
             raise HTTPException(status_code=500, detail="OCR processing failed")
         
-        # Parse extracted text to identify nutrition values
         nutrition_info = parse_nutrition_info(extracted_text)
         
         # Calculate confidence level based on number of fields successfully extracted
-        fields_found = sum(1 for v in nutrition_info.values() if v is not None)
-        confidence = "high" if fields_found >= 5 else "medium" if fields_found >= 3 else "low"
+        fields_found = sum(1 for k, v in nutrition_info.items() if v is not None and k not in ['food_name', 'serving_unit'])
+        confidence = "high" if fields_found >= 4 else "medium" if fields_found >= 2 else "low"
         
         return {
             "success": True,
@@ -148,12 +137,19 @@ async def save_food_to_database(
         # Set user context for Supabase query (required for RLS policies)
         supabase.postgrest.auth(token)
         
+        # Prepare food data with source marked as 'scan' (OCR scan) - Implement Manual and barcode later
         food_data = {
-            "user_id": user["id"],
-            **nutrition_data
+            "food_name": nutrition_data.get("food_name"),
+            "serving_size": nutrition_data.get("serving_size"),
+            "serving_unit": nutrition_data.get("serving_unit"),
+            "calories": nutrition_data.get("calories"),
+            "protein": nutrition_data.get("protein"),
+            "carbs": nutrition_data.get("carbs"),
+            "sugars": nutrition_data.get("sugars"),
+            "source": "scan"
         }
         
-        result = supabase.table("foods").insert(food_data).execute()
+        result = supabase.table("nutrition_facts").insert(food_data).execute()
         
         return {
             "success": True,

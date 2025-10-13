@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, ocr, foods
+from app.routers import auth, ocr
 
 app = FastAPI()
 
 # CORS
-#Info: "https://yourapp.vercel.app" - our deployed frontend URL for PRODUCTION; right now only LOCAL dev
+# Info: "https://yourapp.vercel.app" - our deployed frontend URL for PRODUCTION; right now only LOCAL dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -16,7 +16,6 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(ocr.router)
-app.include_router(foods.router)
 
 @app.get("/")
 def read_root():

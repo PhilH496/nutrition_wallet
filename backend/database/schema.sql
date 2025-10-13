@@ -24,47 +24,65 @@ CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT 
   WITH CHECK (auth.uid() = id);
 
--- Foods table for storing scanned nutrition information
-CREATE TABLE IF NOT EXISTS public.foods (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT,
-    serving_size TEXT,
+-- Nutrition facts table for storing scanned nutrition information
+CREATE TABLE IF NOT EXISTS public.nutrition_facts (
+    nutrition_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    food_name TEXT,
+    serving_size NUMERIC,
+    serving_unit TEXT,
     calories NUMERIC,
-    total_fat NUMERIC,
-    saturated_fat NUMERIC,
-    trans_fat NUMERIC,
-    cholesterol NUMERIC,
-    sodium NUMERIC,
-    total_carbs NUMERIC,
-    fiber NUMERIC,
-    sugar NUMERIC,
     protein NUMERIC,
+    carbs NUMERIC,
+    sugars NUMERIC,
+    source TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 
--- Enable Row Level Security for foods
-ALTER TABLE public.foods ENABLE ROW LEVEL SECURITY;
+-- User nutrition log table for tracking consumption
+CREATE TABLE IF NOT EXISTS public.user_nutrition_log (
+    log_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    nutrition_fact_id UUID NOT NULL REFERENCES public.nutrition_facts(nutrition_id) ON DELETE CASCADE,
+    consumed_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
 
--- RLS Policies: Users can only access their own foods
-CREATE POLICY "Enable read access for users" 
-    ON public.foods FOR SELECT 
+-- Enable Row Level Security for nutrition_facts
+ALTER TABLE public.nutrition_facts ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies: Anyone can read nutrition facts (public data)
+CREATE POLICY "Enable read access for all users" 
+    ON public.nutrition_facts FOR SELECT 
+    USING (true);
+
+CREATE POLICY "Enable insert for authenticated users" 
+    ON public.nutrition_facts FOR INSERT 
+    TO authenticated
+    WITH CHECK (true);
+
+-- Enable Row Level Security for user_nutrition_log
+ALTER TABLE public.user_nutrition_log ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies: Users can only access their own logs
+CREATE POLICY "Enable read access for own logs" 
+    ON public.user_nutrition_log FOR SELECT 
     USING (user_id = auth.uid());
 
-CREATE POLICY "Enable insert for users" 
-    ON public.foods FOR INSERT 
+CREATE POLICY "Enable insert for own logs" 
+    ON public.user_nutrition_log FOR INSERT 
     WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Enable update for users" 
-    ON public.foods FOR UPDATE 
+CREATE POLICY "Enable update for own logs" 
+    ON public.user_nutrition_log FOR UPDATE 
     USING (user_id = auth.uid())
     WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Enable delete for users" 
-    ON public.foods FOR DELETE 
+CREATE POLICY "Enable delete for own logs" 
+    ON public.user_nutrition_log FOR DELETE 
     USING (user_id = auth.uid());
 
 -- Indexes for faster queries
-CREATE INDEX IF NOT EXISTS idx_foods_user_id ON public.foods(user_id);
-CREATE INDEX IF NOT EXISTS idx_foods_created_at ON public.foods(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_nutrition_facts_food_name ON public.nutrition_facts(food_name);
+CREATE INDEX IF NOT EXISTS idx_user_nutrition_log_user_id ON public.user_nutrition_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_nutrition_log_consumed_at ON public.user_nutrition_log(consumed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_nutrition_log_nutrition_fact_id ON public.user_nutrition_log(nutrition_fact_id);

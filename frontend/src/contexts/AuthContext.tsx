@@ -17,22 +17,31 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true) 
+  const [loading, setLoading] = useState(true)
+  const [initialCheckDone, setInitialCheckDone] = useState(false)
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      
-      if (session?.access_token) {
-        localStorage.setItem('token', session.access_token)
-        console.log('Session loaded for:', session.user?.email)
-      } else {
-        localStorage.removeItem('token')
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+        
+        if (session?.access_token) {
+          localStorage.setItem('token', session.access_token)
+          console.log('Session loaded for:', session.user?.email)
+        } else {
+          localStorage.removeItem('token')
+        }
+      } catch (error) {
+        console.error('Error loading session:', error)
+      } finally {
+        setLoading(false)
+        setInitialCheckDone(true)
       }
-      
-      setLoading(false) 
-    })
+    }
+
+    initializeAuth()
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -48,11 +57,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('Token cleared')
       }
       
-      setLoading(false) 
+      if (initialCheckDone) {
+        setLoading(false)
+      }
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [initialCheckDone])
 
   const signUp = async (email: string, password: string, username: string) => {
     // Clear any existing auth state FIRST
@@ -92,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.session?.access_token) {
       localStorage.setItem('token', data.session.access_token)
       console.log('Token saved for:', data.user?.email)
+      setUser(data.user)
     }
   }
 

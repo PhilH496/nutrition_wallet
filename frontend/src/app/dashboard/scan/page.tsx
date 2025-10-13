@@ -4,26 +4,22 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface NutritionData {
-  name: string | null;
-  serving_size: string | null;
+  food_name: string | null;
+  serving_size: number | null;
+  serving_unit: string | null;
   calories: number | null;
-  total_fat: number | null;
-  saturated_fat: number | null;
-  trans_fat: number | null;
-  cholesterol: number | null;
-  sodium: number | null;
-  total_carbs: number | null;
-  fiber: number | null;
-  sugar: number | null;
   protein: number | null;
+  carbs: number | null;
+  sugars: number | null;
 }
 
 export default function ScanPage() {
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>('');
-  const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [nutritionData, setNutritionData] = useState<NutritionData | null>(null);
+  const [rawText, setRawText] = useState<string>('');
   const [cameraActive, setCameraActive] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,30 +28,30 @@ export default function ScanPage() {
   const streamRef = useRef<MediaStream | null>(null);
   const router = useRouter();
 
-    const startCamera = async () => {
+  const startCamera = async () => {
     setCameraActive(true);
     
     setTimeout(async () => {
-        try {
+      try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
+          video: { 
             facingMode: 'environment',
             width: { ideal: 1920 },
             height: { ideal: 1080 }
-            } 
+          } 
         });
         
         if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            streamRef.current = stream;
-            videoRef.current.onloadedmetadata = () => videoRef.current?.play();
+          videoRef.current.srcObject = stream;
+          streamRef.current = stream;
+          videoRef.current.onloadedmetadata = () => videoRef.current?.play();
         }
-        } catch (error) {
+      } catch (error) {
         alert('Could not access camera. Please use upload instead.');
         setCameraActive(false);
-        }
+      }
     }, 100);
-    };
+  };
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach(track => track.stop());
@@ -114,6 +110,7 @@ export default function ScanPage() {
       const data = await response.json();
       if (data.success) {
         setNutritionData(data.nutrition_data);
+        setRawText(data.raw_text || '');
       } else {
         alert('Failed to scan: ' + (data.detail || 'Unknown error'));
       }
@@ -126,7 +123,7 @@ export default function ScanPage() {
 
   const handleSave = async () => {
     if (!nutritionData) return;
-    setLoading(true);
+    setSaving(true);
 
     try {
       const token = localStorage.getItem('token');
@@ -149,7 +146,7 @@ export default function ScanPage() {
     } catch (error) {
       alert('Error saving food');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -157,7 +154,7 @@ export default function ScanPage() {
     if (!nutritionData) return;
     setNutritionData({
       ...nutritionData,
-      [field]: field === 'name' || field === 'serving_size' ? value : (value ? parseFloat(value) : null)
+      [field]: field === 'food_name' || field === 'serving_unit' ? value : (value ? parseFloat(value) : null)
     });
   };
 
@@ -165,6 +162,7 @@ export default function ScanPage() {
     setNutritionData(null);
     setPreview('');
     setImage(null);
+    setRawText('');
     stopCamera();
   };
 
@@ -238,54 +236,132 @@ export default function ScanPage() {
           {/* Nutrition Data Form */}
           {nutritionData && (
             <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-              <h2 className="text-xl font-bold">Extracted Information</h2>
-              <p className="text-sm text-gray-600">Review and edit before saving</p>
+              <h2 className="text-xl font-bold">Extracted Nutrition Information</h2>
+              <p className="text-sm text-gray-600">Review and edit the information before saving</p>
               
-              <input
-                type="text"
-                value={nutritionData.name || ''}
-                onChange={(e) => updateField('name', e.target.value)}
-                placeholder="Product name"
-                className="w-full border rounded-lg px-4 py-2"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  value={nutritionData.food_name || ''}
+                  onChange={(e) => updateField('food_name', e.target.value)}
+                  placeholder="Enter product name"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
               
-              <input
-                type="text"
-                value={nutritionData.serving_size || ''}
-                onChange={(e) => updateField('serving_size', e.target.value)}
-                placeholder="Serving size"
-                className="w-full border rounded-lg px-4 py-2"
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Serving Size
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={nutritionData.serving_size || ''}
+                    onChange={(e) => updateField('serving_size', e.target.value)}
+                    placeholder="0"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Serving Unit
+                  </label>
+                  <input
+                    type="text"
+                    value={nutritionData.serving_unit || ''}
+                    onChange={(e) => updateField('serving_unit', e.target.value)}
+                    placeholder="cup, g, slice"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                {Object.entries(nutritionData).map(([key, value]) => {
-                  if (key === 'name' || key === 'serving_size') return null;
-                  return (
-                    <div key={key}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
-                        {key.replace('_', ' ')}
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={value || ''}
-                        onChange={(e) => updateField(key as keyof NutritionData, e.target.value)}
-                        placeholder="0"
-                        className="w-full border rounded-lg px-4 py-2"
-                      />
-                    </div>
-                  );
-                })}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Calories
+                  </label>
+                  <input
+                    type="number"
+                    step="1"
+                    value={nutritionData.calories || ''}
+                    onChange={(e) => updateField('calories', e.target.value)}
+                    placeholder="0"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Protein (g)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={nutritionData.protein || ''}
+                    onChange={(e) => updateField('protein', e.target.value)}
+                    placeholder="0"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Carbs (g)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={nutritionData.carbs || ''}
+                    onChange={(e) => updateField('carbs', e.target.value)}
+                    placeholder="0"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sugars (g)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={nutritionData.sugars || ''}
+                    onChange={(e) => updateField('sugars', e.target.value)}
+                    placeholder="0"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
               </div>
 
               <div className="flex gap-4 pt-4">
-                <button onClick={reset} className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-medium">
+                <button 
+                  onClick={reset} 
+                  className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-medium transition"
+                >
                   Cancel
                 </button>
-                <button onClick={handleSave} disabled={loading} className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 font-medium">
-                  {loading ? 'Saving...' : 'Save'}
+                <button 
+                  onClick={handleSave} 
+                  disabled={saving}
+                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition"
+                >
+                  {saving ? 'Saving...' : 'Save to Database'}
                 </button>
               </div>
+
+              {/* Raw Text Debug (For Dev Info)*/}
+              {rawText && (
+                <details className="mt-6 border-t pt-4">
+                  <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-900">
+                    View raw extracted text
+                  </summary>
+                  <pre className="mt-2 text-xs bg-gray-50 p-4 rounded border overflow-x-auto text-gray-900">
+                    {rawText}
+                  </pre>
+                </details>
+              )}
             </div>
           )}
         </div>
