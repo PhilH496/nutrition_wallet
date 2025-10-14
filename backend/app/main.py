@@ -1,13 +1,22 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routers import auth, ocr
 
-app = FastAPI(title="Nutrition Wallet Backend")
+app = FastAPI()
 
+# CORS
+# Info: "https://yourapp.vercel.app" - our deployed frontend URL for PRODUCTION; right now only LOCAL dev
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
-
+app.include_router(auth.router)
+app.include_router(ocr.router)
 
 @app.get("/")
-async def root():
-    return {"message": "Nutrition Wallet Backend is running"}
+def read_root():
+    return {"message": "Nutrition Wallet API"}
