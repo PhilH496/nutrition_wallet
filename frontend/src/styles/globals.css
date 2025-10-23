@@ -44,3 +44,28 @@ a {
     color-scheme: dark;
   }
 }
+
+/* gfs neohellenic font classes */
+.gfs-neohellenic-regular {
+  font-family: "GFS Neohellenic", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.gfs-neohellenic-bold {
+  font-family: "GFS Neohellenic", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.gfs-neohellenic-regular-italic {
+  font-family: "GFS Neohellenic", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.gfs-neohellenic-bold-italic {
+  font-family: "GFS Neohellenic", sans-serif;
+  font-weight: 700;
+  font-style: italic;
+}
