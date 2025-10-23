@@ -19,54 +19,98 @@ export default function SignInPage() {
   }, [user, router])
 
   return (
-    <Container size={420} my={40}>
-      <Title ta="center" className="font-['Outfit',var(--mantine-font-family)] font-medium" >
-        Welcome back!
-      </Title>
+    <div style={{ backgroundColor: 'var(--light-green)', minHeight: '100vh' }}>
+      <canvas id="animated-canvas" className="fixed inset-0 z-0"></canvas>
 
-      <Text className="text-[var(--mantine-color-dimmed)] text-sm text-center mt-[5px]">
-        Do not have an account yet? <Anchor href='/create_account'> Create account </Anchor>
-      </Text>
+      <Container size={420} my={40} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -70%)', zIndex: 1 }}>
+        <Title ta="center" className="gfs-neohellenic-bold text-white">
+          Welcome back!
+        </Title>
 
-      <Paper withBorder shadow="sm" p={22} mt={30} radius="md">
-        <TextInput label="Email" placeholder="you@mantine.dev" required radius="md"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <PasswordInput label="Password" placeholder="Your password" required mt="md" radius="md"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <Group justify="space-between" mt="lg">
-          <Checkbox label="Remember me" />
-          <Anchor component="button" size="sm">
-            Forgot password?
-          </Anchor>
-        </Group>
-        <Button
-          fullWidth mt="xl"
-          radius="md"
-          onClick={() => {
-            try {
-              (async () => {
-                await signIn(email, password)
-              })()
-            } catch (err: any) {
-              setError(err.message)
-            }
-          }
-          }
+        <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px]">
+          Do not have an account yet? <Anchor href='/create_account'className='text-[var(--text-black)]'> Create account </Anchor>
+        </Text>
+
+        <Paper 
+          withBorder 
+          shadow="sm" 
+          p={22} 
+          mt={30} 
+          radius="md" 
+          className="bg-[var(--light-green)] border-[var(--dark-green)]"
         >
-          Sign in
-        </Button>
-        {error && (
-          <div>
-            {error}
-          </div>
-        )}
+          <TextInput
+            label="Email"
+            placeholder="you@asu.edu"
+            required
+            radius="md"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            styles={{
+              input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
+            }}
+          />
+          <PasswordInput
+            label="Password"
+            placeholder="your password"
+            required
+            mt="md"
+            radius="md"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            styles={{
+              input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
+            }}
+          />
+          <Group justify="space-between" mt="lg">
+            <Checkbox
+              variant='outline'
+              color='var(--dark-green)'
+              iconColor='var(--dark-green)'
+              label="Remember me"
+              styles={{
+                label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
+              }}
+            />
+            <Anchor
+              component="button"
+              size="sm"
+              style={{ color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }}
+            >
+              Forgot password?
+            </Anchor>
+          </Group>
+          <Button
+            fullWidth mt="xl"
+            radius="md"
+            onClick={() => {
+              try {
+                (async () => {
+                  await signIn(email, password)
+                })()
+              } catch (err: any) {
+                setError(err.message)
+              }
+            }
+            }
+            styles={{
+              root: { backgroundColor: 'var(--light-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
+              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 700 }
+            }}
+          >
+            Sign in
+          </Button>
+          {error && (
+            <div style={{ color: 'text-white', backgroundColor: 'var(--text-black)', borderColor: 'var(--dark-green)', border: '1px solid #FCEE0A', fontFamily: 'GFS Neohellenic, sans-serif' }} className="text-sm rounded-md p-3 mt-3">
+              {error}
+            </div>
+          )}
+        </Paper>
+      </Container>
 
-
-      </Paper>
-    </Container>
+      <script src="/lines.js"></script>
+    </div>
   );
 }

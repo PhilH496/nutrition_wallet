@@ -7,10 +7,21 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --text-black: #222222;
+  --dark-green: #677a78;
+  --light-green: #b8cf81;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --text-black: #222222;
+    --dark-green: #677a78;
+    --light-green: #b8cf81;
   }
 }
 
