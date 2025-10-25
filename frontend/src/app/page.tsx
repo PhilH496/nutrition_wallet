@@ -24,19 +24,19 @@ export default function SignInPage() {
 
       <Container size={420} my={40} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -70%)', zIndex: 1 }}>
         <Title ta="center" className="gfs-neohellenic-bold text-white">
-          Welcome back!
+          Nutrition Wallet
         </Title>
 
         <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px]">
-          Do not have an account yet? <Anchor href='/create_account'className='text-[var(--text-black)]'> Create account </Anchor>
+          Don't have an account yet? <Anchor href='/create_account' className='text-[var(--text-black)]'> Create account </Anchor>
         </Text>
 
-        <Paper 
-          withBorder 
-          shadow="sm" 
-          p={22} 
-          mt={30} 
-          radius="md" 
+        <Paper
+          withBorder
+          shadow="sm"
+          p={22}
+          mt={30}
+          radius="md"
           className="bg-[var(--light-green)] border-[var(--dark-green)]"
         >
           <TextInput
