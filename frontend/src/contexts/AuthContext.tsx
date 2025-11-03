@@ -29,12 +29,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.access_token) {
           localStorage.setItem('token', session.access_token)
-          console.log('Session loaded for:', session.user?.email)
         } else {
           localStorage.removeItem('token')
         }
       } catch (error) {
-        console.error('Error loading session:', error)
       } finally {
         setLoading(false)
         setInitialCheckDone(true)
@@ -45,16 +43,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth event:', event, session?.user?.email)
       
       setUser(session?.user ?? null)
       
       if (session?.access_token) {
         localStorage.setItem('token', session.access_token)
-        console.log('Token updated for:', session.user?.email)
       } else {
         localStorage.removeItem('token')
-        console.log('Token cleared')
       }
       
       if (initialCheckDone) {
@@ -67,7 +62,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, username: string) => {
     // Clear any existing auth state FIRST
-    console.log('Clearing old auth state before signup...')
     localStorage.removeItem('token')
     await supabase.auth.signOut()
     
@@ -85,7 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(errorData.detail || 'Signup failed')
     }
     
-    console.log('Signup successful, signing in...')
     
     // Sign in with new account
     await signIn(email, password)
@@ -94,7 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     // Clear old token first
     localStorage.removeItem('token')
-    console.log('Signing in...')
     
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
@@ -102,13 +94,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Store the new token
     if (data.session?.access_token) {
       localStorage.setItem('token', data.session.access_token)
-      console.log('Token saved for:', data.user?.email)
       setUser(data.user)
     }
   }
 
   const signOut = async () => {
-    console.log('Signing out...')
     
     // Clear token first
     localStorage.removeItem('token')
@@ -117,7 +107,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     
-    console.log('Signed out successfully')
   }
 
   return (
