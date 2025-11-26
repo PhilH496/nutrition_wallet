@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core';
-import { SessionProvider } from "next-auth/react";
 import "@mantine/core/styles.css";
 import "../styles/globals.css";
 
@@ -24,11 +23,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=GFS+Neohellenic:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <SessionProvider>
           <MantineProvider defaultColorScheme="light">
             <AuthProvider>{children}</AuthProvider>
           </MantineProvider>
-        </SessionProvider>
       </body>
     </html>
   );
