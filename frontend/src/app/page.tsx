@@ -6,10 +6,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'
 
 export default function SignInPage() {
-  const { signIn, user } = useAuth()
+  const { signIn, signInWithOAuth, user } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -17,6 +19,32 @@ export default function SignInPage() {
       router.push('/dashboard')
     }
   }, [user, router])
+
+  const handleEmailSignIn = async () => {
+    setError('')
+    setIsSubmitting(true)
+
+    try {
+      await signIn(email, password)
+    } catch (err: any) {
+      setError(err.message ?? 'Unable to sign in')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setError('')
+    setGoogleLoading(true)
+
+    try {
+      await signInWithOAuth('google')
+    } catch (err: any) {
+      setError(err.message ?? 'Unable to sign in with Google')
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
 
   return (
     <div style={{ backgroundColor: 'var(--light-green)', minHeight: '100vh' }}>
@@ -83,24 +111,33 @@ export default function SignInPage() {
             </Anchor>
           </Group>
           <Button
-            fullWidth mt="xl"
+            fullWidth
+            mt="xl"
             radius="md"
-            onClick={() => {
-              try {
-                (async () => {
-                  await signIn(email, password)
-                })()
-              } catch (err: any) {
-                setError(err.message)
-              }
-            }
-            }
+            loading={isSubmitting}
+            onClick={handleEmailSignIn}
             styles={{
               root: { backgroundColor: 'var(--light-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
               label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 700 }
             }}
           >
             Sign in
+          </Button>
+          <Button
+            fullWidth
+            mt="sm"
+            radius="md"
+            loading={googleLoading}
+            variant="default"
+            onClick={handleGoogleSignIn}
+            styles={{
+              root: { backgroundColor: 'var(--light-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
+              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 700 }
+            }}
+          >
+            <span className="flex w-full items-center justify-center gap-2">
+              Sign in with Google
+            </span>
           </Button>
           {error && (
             <div style={{ color: 'text-white', backgroundColor: 'var(--text-black)', borderColor: 'var(--dark-green)', border: '1px solid #FCEE0A', fontFamily: 'GFS Neohellenic, sans-serif' }} className="text-sm rounded-md p-3 mt-3">
