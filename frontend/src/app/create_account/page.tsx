@@ -1,9 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { Anchor, Button, Container, Group, Paper, PasswordInput, TextInput, Title, } from '@mantine/core';
+import { Anchor, Button, Container, Paper, PasswordInput, Text, TextInput, Title, } from '@mantine/core';
 
 export default function CreateAccountPage() {
     const [isSignUp, setIsSignUp] = useState(false)
@@ -20,7 +20,7 @@ export default function CreateAccountPage() {
         }
     }, [user, router])
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
         setError('')
         if (password.length < 6) {
@@ -52,64 +52,116 @@ export default function CreateAccountPage() {
     }
 
     return (
-        <Container size={420} my={40}>
-            <Title ta="center" className="font-['Outfit',var(--mantine-font-family)] font-medium">
-                Create Account
-            </Title>
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <Paper withBorder shadow="sm" p={22} mt={30} radius="md">
-                    <TextInput
-                        label="Enter Email"
-                        placeholder="you@epicreddit.com"
-                        required radius="md"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        minLength={3}
-                        maxLength={20}
-                    />
-                    <TextInput
-                        label="Enter Username"
-                        placeholder="awsomesauce123"
+        <div style={{ backgroundColor: 'var(--light-green)', minHeight: '100vh' }}>
+            <canvas id="animated-canvas" className="fixed inset-0 z-0"></canvas>
+
+            <Container
+                size={420}
+                my={40}
+                style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -70%)',
+                    zIndex: 1,
+                    width: '295.438px',
+                }}
+            >
+                <Title ta="center" className="gfs-neohellenic-bold text-white">
+                    Create Account
+                </Title>
+
+                <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px] text-center">
+                    Already have an account?{' '}
+                    <Anchor href="/" className="text-[var(--text-black)] font-semibold">
+                        Sign in
+                    </Anchor>
+                </Text>
+
+                <form onSubmit={handleSubmit}>
+                    <Paper
+                        withBorder
+                        shadow="sm"
+                        p={22}
+                        mt={30}
                         radius="md"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        maxLength={20}
-                    />
-                    <PasswordInput
-                        label="Create Password"
-                        placeholder="Your password"
-                        required mt="md"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        minLength={3}
-                        maxLength={30}
-                    />
-                    {error && (
-                        <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3">
-                            {error}
-                        </div>
-                    )}
-                    <Button
-                        type='submit'
-                        fullWidth mt="xl"
-                        radius="md"
-                        onClick={() => setIsSignUp(!isSignUp)}
+                        className="bg-[var(--light-green)] border-[var(--dark-green)]"
+                        style={{ width: '263.438px' }}
                     >
-                        Create Account
-                    </Button>
-                    <Group justify="center" mt="md">
-                        <Anchor href="./">Already have an account? Sign in</Anchor>
-                    </Group>
-                    {error && (
-                        <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3">
-                            {error}
-                        </div>
-                    )}
-                </Paper>
-            </form>
+                        <TextInput
+                            label="Enter Email"
+                            placeholder="you@example.com"
+                            required
+                            radius="md"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            minLength={3}
+                            maxLength={20}
+                            styles={{
+                                input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+                                label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
+                              }}
+                        />
+                        <TextInput
+                            label="Enter Username"
+                            required
+                            placeholder="awsomesauce123"
+                            radius="md"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            maxLength={20}
+                            styles={{
+                                input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+                                label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
+                            }}
+                        />
+                        <PasswordInput
+                            label="Create Password"
+                            placeholder="Your password"
+                            required
+                            radius="md"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            minLength={3}
+                            maxLength={30}
+                            styles={{
+                                input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+                                label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
+                            }}
+                        />
+                        {error && (
+                            <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3 mt-3">
+                                {error}
+                            </div>
+                        )}
+                        <Button
+                            type="submit"
+                            fullWidth
+                            mt="lg"
+                            radius="md"
+                            onClick={() => setIsSignUp(!isSignUp)}
+                            styles={{
+                                root: {
+                                    backgroundColor: 'var(--light-green)',
+                                    color: 'var(--text-black)',
+                                    borderColor: 'var(--dark-green)',
+                                    borderWidth: 1,
+                                },
+                                label: {
+                                    color: 'var(--text-black)',
+                                    fontFamily: 'GFS Neohellenic, sans-serif',
+                                    fontWeight: 700,
+                                },
+                            }}
+                        >
+                            Create Account
+                        </Button>
+                    </Paper>
+                </form>
+            </Container>
 
-
-        </Container>
+            <script src="/lines.js"></script>
+        </div>
     )
 
 }
