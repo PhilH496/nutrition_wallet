@@ -4,6 +4,7 @@ import { Anchor, Button, Checkbox, Container, Group, Paper, PasswordInput, Text,
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'
+import { FcGoogle } from 'react-icons/fc'
 
 export default function SignInPage() {
   const { signIn, signInWithOAuth, user } = useAuth()
@@ -136,6 +137,7 @@ export default function SignInPage() {
             }}
           >
             <span className="flex w-full items-center justify-center gap-2">
+              <FcGoogle/>
               Sign in with Google
             </span>
           </Button>
