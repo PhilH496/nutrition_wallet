@@ -7,10 +7,21 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --text-black: #222222;
+  --dark-green: #677a78;
+  --light-green: #b8cf81;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --text-black: #222222;
+    --dark-green: #677a78;
+    --light-green: #b8cf81;
   }
 }
 
@@ -34,6 +45,10 @@ body {
   margin: 0;
 }
 
+* {
+  font-family: GFS Neohellenic, sans-serif;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -43,4 +58,29 @@ a {
   html {
     color-scheme: dark;
   }
+}
+
+/* gfs neohellenic font classes */
+.gfs-neohellenic-regular {
+  font-family: "GFS Neohellenic", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.gfs-neohellenic-bold {
+  font-family: "GFS Neohellenic", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.gfs-neohellenic-regular-italic {
+  font-family: "GFS Neohellenic", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.gfs-neohellenic-bold-italic {
+  font-family: "GFS Neohellenic", sans-serif;
+  font-weight: 700;
+  font-style: italic;
 }

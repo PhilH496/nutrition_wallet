@@ -1,167 +1,155 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { Anchor, Button, Checkbox, Container, Group, Paper, PasswordInput, Text, TextInput, Title, } from '@mantine/core';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'
+import { FcGoogle } from 'react-icons/fc'
 
-export default function Home() {
-  const [isSignUp, setIsSignUp] = useState(false)
+export default function SignInPage() {
+  const { signIn, signInWithOAuth, user } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [username, setUsername] = useState('')
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const { signUp, signIn, user, loading } = useAuth() 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && user) {  
-      router.push('/dashboard')
+    if (user) {
+      router.push('/dashboard/scan')
     }
-  }, [user, loading, router])
+  }, [user, router])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleEmailSignIn = async () => {
     setError('')
-    
-    // Frontend validation
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
-    }
-    
-    if (isSignUp && username.length < 3) {
-      setError('Username must be at least 3 characters')
-      return
-    }
-    
-    setIsLoading(true)
-    
+    setIsSubmitting(true)
+
     try {
-      if (isSignUp) {
-        await signUp(email, password, username)
-      } else {
-        await signIn(email, password)
-      }
-      // Navigation handled by useEffect
+      await signIn(email, password)
     } catch (err: any) {
-
-      let errorMessage = 'Authentication failed'
-      
-      if (err.message?.includes('duplicate key')) {
-        errorMessage = 'Username or email already exists'
-      } else if (err.message?.includes('already exists')) {
-        errorMessage = err.message
-      } else if (err.message?.includes('already taken')) {
-        errorMessage = err.message
-      } else if (err.message?.includes('Invalid login credentials')) {
-        errorMessage = 'Invalid email or password'
-      } else if (err.message?.includes('Invalid email')) {
-        errorMessage = 'Invalid email or password'
-      } else if (err.message?.includes('Password')) {
-        errorMessage = err.message
-      } else if (err.message) {
-        errorMessage = err.message
-      }
-      
-      setError(errorMessage)
+      setError(err.message ?? 'Unable to sign in')
     } finally {
-      setIsLoading(false)
+      setIsSubmitting(false)
     }
   }
 
-  // Show loading while checking auth state
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    )
-  }
+  const handleGoogleSignIn = async () => {
+    setError('')
+    setGoogleLoading(true)
 
-  // Don't render login form if already logged in
-  if (user) {
-    return null
+    try {
+      await signInWithOAuth('google')
+    } catch (err: any) {
+      setError(err.message ?? 'Unable to sign in with Google')
+    } finally {
+      setGoogleLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <h2 className="text-3xl font-bold text-center">
-          {isSignUp ? 'Sign Up' : 'Sign In'}
-        </h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
-              required
-              disabled={isLoading}
+    <div style={{ backgroundColor: 'var(--light-green)', minHeight: '100vh' }}>
+      <canvas id="animated-canvas" className="fixed inset-0 z-0"></canvas>
+
+      <Container size={420} my={40} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -70%)', zIndex: 1 }}>
+        <Title ta="center" className="gfs-neohellenic-bold text-white">
+          Nutrition Wallet
+        </Title>
+
+        <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px]">
+          Don't have an account yet? <Anchor href='/create-account' className='text-[var(--text-black)]'> Create account </Anchor>
+        </Text>
+
+        <Paper
+          withBorder
+          shadow="sm"
+          p={22}
+          mt={30}
+          radius="md"
+          className="bg-[var(--light-green)] border-[var(--dark-green)]"
+        >
+          <TextInput
+            label="Email"
+            placeholder="you@asu.edu"
+            required
+            radius="md"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            styles={{
+              input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
+            }}
+          />
+          <PasswordInput
+            label="Password"
+            placeholder="your password"
+            required
+            mt="md"
+            radius="md"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            styles={{
+              input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
+            }}
+          />
+          <Group justify="space-between" mt="lg">
+            <Checkbox
+              variant='outline'
+              color='var(--dark-green)'
+              iconColor='var(--dark-green)'
+              label="Remember me"
+              styles={{
+                label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
+              }}
             />
-          </div>
-
-          {isSignUp && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
-                required
-                disabled={isLoading}
-                minLength={3}
-                maxLength={20}
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
-              required
-              disabled={isLoading}
-              minLength={6}
-            />
-          </div>
-
+            <Anchor
+              component="button"
+              size="sm"
+              style={{ color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }}
+            >
+              Forgot password?
+            </Anchor>
+          </Group>
+          <Button
+            fullWidth
+            mt="xl"
+            radius="md"
+            loading={isSubmitting}
+            onClick={handleEmailSignIn}
+            styles={{
+              root: { backgroundColor: 'var(--light-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
+              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 700 }
+            }}
+          >
+            Sign in
+          </Button>
+          <Button
+            fullWidth
+            mt="sm"
+            radius="md"
+            loading={googleLoading}
+            variant="default"
+            onClick={handleGoogleSignIn}
+            styles={{
+              root: { backgroundColor: 'var(--light-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
+              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 700 }
+            }}
+          >
+            <span className="flex w-full items-center justify-center gap-2">
+              Sign in with Google
+              <FcGoogle/>
+            </span>
+          </Button>
           {error && (
-            <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3">
+            <div style={{ color: 'text-white', backgroundColor: 'var(--text-black)', borderColor: 'var(--dark-green)', border: '1px solid #FCEE0A', fontFamily: 'GFS Neohellenic, sans-serif' }} className="text-sm rounded-md p-3 mt-3">
               {error}
             </div>
           )}
+        </Paper>
+      </Container>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-md transition-colors"
-          >
-            {isLoading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
-          </button>
-        </form>
-
-        <button
-          onClick={() => setIsSignUp(!isSignUp)}
-          disabled={isLoading}
-          className="w-full text-sm text-blue-600 hover:text-blue-500 disabled:text-gray-400"
-        >
-          {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-        </button>
-      </div>
+      <script src="/lines.js"></script>
     </div>
-  )
+  );
 }
