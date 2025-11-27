@@ -16,7 +16,7 @@ export default function CreateAccountPage() {
 
     useEffect(() => {
         if (user) {
-            router.push('/dashboard')
+            router.push('/dashboard/scan')
         }
     }, [user, router])
 

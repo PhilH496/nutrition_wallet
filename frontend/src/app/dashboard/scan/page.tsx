@@ -4,6 +4,7 @@ import { useState, useRef, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaCamera } from 'react-icons/fa';
 import { TextInput } from '@mantine/core';
+import { HeaderMegaMenu } from '@/app/Header';
 
 interface NutritionData {
   food_name: string | null;
@@ -145,7 +146,7 @@ export default function ScanPage() {
       const data = await response.json();
       if (data.success) {
         alert('Food saved successfully!');
-        router.push('/dashboard');
+        router.push('/dashboard/scan');
       } else {
         alert(data.detail);
       }
@@ -183,15 +184,10 @@ export default function ScanPage() {
     <div
       className="min-h-screen bg-[var(--light-green)] py-8"
     >
-      <div className="max-w-2xl mx-auto">
+      <HeaderMegaMenu />
+      <div className="max-w-2xl mx-auto mt-5">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold text-[var(--dark-green)]">Scan Nutrition Label</h1>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-4 py-2 rounded-lg hover:bg-white transition"
-          >
-            ← Back
-          </button>
         </div>
         <p className="text-[var(--dark-green)] mb-8">Take or upload a photo of a nutrition label</p>
 
