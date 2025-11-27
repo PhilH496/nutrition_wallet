@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Box, Button, Group, Text, UnstyledButton } from '@mantine/core';
+import { Box, Group, Text, UnstyledButton } from '@mantine/core';
 
 export function HeaderMegaMenu() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export function HeaderMegaMenu() {
   };
 
   return (
-    <Box component="header" className="bg-[var(--light-green)] border-b border-[var(--dark-green)] shadow-sm">
+    <Box component="header" className="bg-[var(--light-green)] border-b border-[var(--dark-green)]">
       <Group className="max-w-6xl mx-auto px-6 py-3 justify-between">
         <UnstyledButton
           onClick={() => router.push('/dashboard/scan')}
@@ -34,7 +34,7 @@ export function HeaderMegaMenu() {
           className="bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-1 rounded-lg hover:bg-white"
           onClick={handleSignOut}
         >
-          Signout
+          Sign out
         </button>
       </Group>
     </Box>
