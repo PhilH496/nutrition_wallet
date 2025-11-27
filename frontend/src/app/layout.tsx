@@ -6,7 +6,7 @@ import "../styles/globals.css";
 
 export const metadata: Metadata = {
   title: "Nutrition Wallet",
-  description: "Track your nutrition",
+  description: "Nutrition tracker with OCR",
 };
 
 export default function RootLayout({
