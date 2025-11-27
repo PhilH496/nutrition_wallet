@@ -57,7 +57,7 @@ export default function SignInPage() {
         </Title>
 
         <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px]">
-          Don't have an account yet? <Anchor href='/create_account' className='text-[var(--text-black)]'> Create account </Anchor>
+          Don't have an account yet? <Anchor href='/create-account' className='text-[var(--text-black)]'> Create account </Anchor>
         </Text>
 
         <Paper
@@ -137,8 +137,8 @@ export default function SignInPage() {
             }}
           >
             <span className="flex w-full items-center justify-center gap-2">
-              <FcGoogle/>
               Sign in with Google
+              <FcGoogle/>
             </span>
           </Button>
           {error && (
