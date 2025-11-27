@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { FaCamera } from 'react-icons/fa';
+import { TextInput } from '@mantine/core';
 
 interface NutritionData {
   food_name: string | null;
@@ -80,7 +82,7 @@ export default function ScanPage() {
     }, 'image/jpeg', 0.95);
   };
 
-  const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageCapture = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -110,18 +112,22 @@ export default function ScanPage() {
       const data = await response.json();
       if (data.success) {
         setNutritionData(data.nutrition_data);
-        setRawText(data.raw_text || '');
+        setRawText(data.raw_text);
       } else {
-        alert('Failed to scan: ' + (data.detail || 'Unknown error'));
+        alert(data.detail);
       }
     } catch (error) {
-      alert('Error scanning label. Make sure backend is running.');
+      alert("Error scanning: " + error);
     } finally {
       setScanning(false);
     }
   };
 
   const handleSave = async () => {
+    if (!nutritionData?.food_name) {
+      alert('Enter a food name before saving.')
+      return;
+    }
     if (!nutritionData) return;
     setSaving(true);
 
@@ -141,7 +147,7 @@ export default function ScanPage() {
         alert('Food saved successfully!');
         router.push('/dashboard');
       } else {
-        alert('Failed to save: ' + (data.detail || 'Unknown error'));
+        alert(data.detail);
       }
     } catch (error) {
       alert('Error saving food');
@@ -154,8 +160,15 @@ export default function ScanPage() {
     if (!nutritionData) return;
     setNutritionData({
       ...nutritionData,
-      [field]: field === 'food_name' || field === 'serving_unit' ? value : (value ? parseFloat(value) : null)
+      [field]: field === 'food_name' || field === 'serving_unit' 
+      ? value 
+      : (value ? parseFloat(value) : null)
     });
+  };
+
+  const sharedInputStyles = {
+    input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)' },
+    label: { color: 'var(--text-black)' }
   };
 
   const reset = () => {
@@ -167,19 +180,24 @@ export default function ScanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div
+      className="min-h-screen bg-[var(--light-green)] py-8"
+    >
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold text-gray-900">Scan Nutrition Label</h1>
-          <button onClick={() => router.push('/dashboard')} className="text-gray-600 hover:text-gray-900">
+          <h1 className="text-3xl font-bold text-[var(--dark-green)]">Scan Nutrition Label</h1>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-4 py-2 rounded-lg hover:bg-white transition"
+          >
             ← Back
           </button>
         </div>
-        <p className="text-gray-600 mb-8">Take or upload a photo of a nutrition label</p>
+        <p className="text-[var(--dark-green)] mb-8">Take or upload a photo of a nutrition label</p>
 
         <div className="space-y-6">
           {/* Camera/Upload Section */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-[var(--light-green)]-lg shadow-md p-6 border border-[var(--dark-green)]">
             {cameraActive ? (
               <div className="space-y-4">
                 <div className="relative bg-black rounded-lg overflow-hidden" style={{ minHeight: '400px' }}>
@@ -187,10 +205,16 @@ export default function ScanPage() {
                 </div>
                 <canvas ref={canvasRef} className="hidden" />
                 <div className="flex gap-3">
-                  <button onClick={capturePhoto} className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium">
+                  <button
+                    onClick={capturePhoto}
+                    className="flex-1 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white font-medium transition"
+                  >
                     Capture Photo
                   </button>
-                  <button onClick={stopCamera} className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+                  <button
+                    onClick={stopCamera}
+                    className="px-6 py-3 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] rounded-lg hover:bg-white font-medium transition"
+                  >
                     Cancel
                   </button>
                 </div>
@@ -199,25 +223,36 @@ export default function ScanPage() {
               <div className="space-y-4">
                 <img src={preview} alt="Preview" className="max-w-full h-auto mx-auto rounded-lg shadow-sm" style={{ maxHeight: '400px' }} />
                 <div className="flex gap-3">
-                  <button onClick={startCamera} className="flex-1 text-blue-600 hover:text-blue-700 font-medium py-2">
+                  <button
+                    onClick={startCamera}
+                    className="flex-1 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] font-medium py-2 rounded-lg hover:bg-white transition"
+                  >
                     Retake
                   </button>
-                  <button onClick={() => fileInputRef.current?.click()} className="flex-1 text-blue-600 hover:text-blue-700 font-medium py-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] font-medium py-2 rounded-lg hover:bg-white transition"
+                  >
                     Upload Different
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center space-y-6">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+              <div className="border-2 border-dashed border-[var(--dark-green)] rounded-lg p-8 space-y-6">
+     
+                <FaCamera className="mx-auto h-12 w-12 text-[var(--dark-green)]"/>
+
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button onClick={startCamera} className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium">
+                  <button
+                    onClick={startCamera}
+                    className="bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white"
+                  >
                     Take Photo
                   </button>
-                  <button onClick={() => fileInputRef.current?.click()} className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-medium">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white"
+                  >
                     Upload Photo
                   </button>
                 </div>
@@ -227,7 +262,11 @@ export default function ScanPage() {
             <input ref={fileInputRef} type="file" onChange={handleImageCapture} accept="image/*" className="hidden" />
 
             {preview && !nutritionData && (
-              <button onClick={handleScan} disabled={scanning} className="w-full mt-6 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 font-medium">
+              <button
+                onClick={handleScan}
+                disabled={scanning}
+                className="w-full mt-6 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 {scanning ? 'Scanning...' : 'Scan Label'}
               </button>
             )}
@@ -235,129 +274,113 @@ export default function ScanPage() {
 
           {/* Nutrition Data Form */}
           {nutritionData && (
-            <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-              <h2 className="text-xl font-bold">Extracted Nutrition Information</h2>
-              <p className="text-sm text-gray-600">Review and edit the information before saving</p>
+            <div className="bg-[var(--light-green)]-lg shadow-md p-6 space-y-4 border border-[var(--dark-green)]">
+              <h2 className="text-xl font-bold text-[var(--dark-green)]">Extracted Nutrition Information</h2>
+              <p className="text-sm text-[var(--dark-green)]">Review and edit the information before saving</p>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Product Name
-                </label>
-                <input
-                  type="text"
-                  value={nutritionData.food_name || ''}
-                  onChange={(e) => updateField('food_name', e.target.value)}
-                  placeholder="Enter product name"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+              <TextInput
+                label="Food Name"
+                placeholder="Enter food name"
+                required
+                radius="md"
+                value={nutritionData.food_name!}
+                onChange={(e) => updateField('food_name', e.target.value)}
+                styles={{
+                  input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)' },
+                  label: { color: 'var(--text-black)' }
+                }}
+              />
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Serving Size
-                  </label>
-                  <input
+                  <TextInput
+                    label="Serving Size"
                     type="number"
-                    step="0.1"
+                    radius="md"
                     value={nutritionData.serving_size || ''}
                     onChange={(e) => updateField('serving_size', e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    styles={sharedInputStyles}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Serving Unit
-                  </label>
-                  <input
+                  <TextInput
+                    label="Serving Unit"
                     type="text"
+                    placeholder="cup, g, slice"
+                    radius="md"
                     value={nutritionData.serving_unit || ''}
                     onChange={(e) => updateField('serving_unit', e.target.value)}
-                    placeholder="cup, g, slice"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    styles={sharedInputStyles}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--dark-green)]">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Calories
-                  </label>
-                  <input
+                  <TextInput
+                    label="Calories"
                     type="number"
-                    step="1"
+                    radius="md"
                     value={nutritionData.calories || ''}
                     onChange={(e) => updateField('calories', e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    styles={sharedInputStyles}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Protein (g)
-                  </label>
-                  <input
+                  <TextInput
+                    label="Protein (g)"
                     type="number"
-                    step="0.1"
+                    radius="md"
                     value={nutritionData.protein || ''}
                     onChange={(e) => updateField('protein', e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    styles={sharedInputStyles}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Carbs (g)
-                  </label>
-                  <input
+                  <TextInput
+                    label="Carbs (g)"
                     type="number"
-                    step="0.1"
+                    radius="md"
                     value={nutritionData.carbs || ''}
                     onChange={(e) => updateField('carbs', e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    styles={sharedInputStyles}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sugars (g)
-                  </label>
-                  <input
+                  <TextInput
+                    label="Sugars (g)"
                     type="number"
-                    step="0.1"
+                    radius="md"
                     value={nutritionData.sugars || ''}
                     onChange={(e) => updateField('sugars', e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    styles={sharedInputStyles}
                   />
                 </div>
               </div>
 
               <div className="flex gap-4 pt-4">
                 <button 
-                  onClick={reset} 
-                  className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-medium transition"
-                >
-                  Cancel
-                </button>
-                <button 
                   onClick={handleSave} 
                   disabled={saving}
-                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium transition"
+                  className="flex-1 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed font-medium transition"
                 >
-                  {saving ? 'Saving...' : 'Save to Database'}
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button 
+                  onClick={reset} 
+                  className="flex-1 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white font-medium transition"
+                >
+                  Cancel
                 </button>
               </div>
 
               {/* Raw Text Debug (For Dev Info)*/}
               {rawText && (
-                <details className="mt-6 border-t pt-4">
-                  <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-900">
+                <details className="mt-6 border-t border-[var(--dark-green)] pt-4">
+                  <summary className="text-sm text-[var(--dark-green)] cursor-pointer hover:text-[var(--dark-green)]">
                     View raw extracted text
                   </summary>
-                  <pre className="mt-2 text-xs bg-gray-50 p-4 rounded border overflow-x-auto text-gray-900">
+                  <pre className="mt-2 text-xs bg-white p-4 rounded border border-[var(--dark-green)] overflow-x-auto text-[var(--dark-green)]">
                     {rawText}
                   </pre>
                 </details>
