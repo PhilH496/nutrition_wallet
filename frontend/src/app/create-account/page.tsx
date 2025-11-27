@@ -163,5 +163,4 @@ export default function CreateAccountPage() {
             <script src="/lines.js"></script>
         </div>
     )
-
 }
