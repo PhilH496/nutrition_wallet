@@ -4,16 +4,19 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
+type OAuthProvider = 'google'
+
 type AuthContextType = {
   user: User | null
   loading: boolean 
   signUp: (email: string, password: string, username: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
+  signInWithOAuth: (provider: OAuthProvider) => Promise<void>
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -98,6 +101,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const signInWithOAuth = async (provider: OAuthProvider) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : API_URL!
+    const redirectTo = `${origin}/auth/callback`
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo }
+    })
+
+    if (error) throw error
+  }
+
   const signOut = async () => {
     
     // Clear token first
@@ -110,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signInWithOAuth, signOut }}>
       {children}
     </AuthContext.Provider>
   )
