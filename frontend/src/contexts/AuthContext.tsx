@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
@@ -18,7 +18,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [initialCheckDone, setInitialCheckDone] = useState(false)
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        setUser(session?.user ?? null)
+        setUser(session?.user || null)
         
         if (session?.access_token) {
           localStorage.setItem('token', session.access_token)
@@ -45,9 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       
-      setUser(session?.user ?? null)
+      setUser(session?.user || null)
       
       if (session?.access_token) {
         localStorage.setItem('token', session.access_token)
@@ -68,20 +68,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('token')
     await supabase.auth.signOut()
     
-    // delay to ensure clean state
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
     const response = await fetch(`${API_URL}/api/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, username }),
     })
-    
+
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.detail || 'Signup failed')
+      const error = await response.json()
+      throw error
     }
-    
     
     // Sign in with new account
     await signIn(email, password)
