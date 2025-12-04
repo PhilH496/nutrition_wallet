@@ -7,14 +7,15 @@ import { TextInput } from '@mantine/core';
 import { HeaderMegaMenu } from '@/components/dashboard/Header';
 import { SideBar } from '@/components/dashboard/SideBar';
 
+// CHANGED: All fields default to empty string or 0 to avoid null issues
 interface NutritionData {
-  food_name: string | null;
-  serving_size: number | null;
-  serving_unit: string | null;
-  calories: number | null;
-  protein: number | null;
-  carbs: number | null;
-  sugars: number | null;
+  food_name: string;
+  serving_size: number | string;
+  serving_unit: string;
+  calories: number | string;
+  protein: number | string;
+  carbs: number | string;
+  sugars: number | string;
 }
 
 export default function ScanPage() {
@@ -22,6 +23,7 @@ export default function ScanPage() {
   const [preview, setPreview] = useState<string>('');
   const [scanning, setScanning] = useState(false);
   const [saving, setSaving] = useState(false);
+  // CHANGED: Initialize with empty values instead of null
   const [nutritionData, setNutritionData] = useState<NutritionData | null>(null);
   const [rawText, setRawText] = useState<string>('');
   const [cameraActive, setCameraActive] = useState(false);
@@ -113,7 +115,16 @@ export default function ScanPage() {
 
       const data = await response.json();
       if (data.success) {
-        setNutritionData(data.nutrition_data);
+        // CHANGED: Convert null values to empty strings to avoid React warnings
+        setNutritionData({
+          food_name: data.nutrition_data.food_name ?? '',
+          serving_size: data.nutrition_data.serving_size ?? '',
+          serving_unit: data.nutrition_data.serving_unit ?? '',
+          calories: data.nutrition_data.calories ?? '',
+          protein: data.nutrition_data.protein ?? '',
+          carbs: data.nutrition_data.carbs ?? '',
+          sugars: data.nutrition_data.sugars ?? '',
+        });
         setRawText(data.raw_text);
       } else {
         alert(data.detail);
@@ -148,7 +159,8 @@ export default function ScanPage() {
       if (data.success) {
         alert('Food saved successfully!');
         reset();
-        router.refresh();
+        // CHANGED: Navigate to table page and force full page reload to refresh data
+        window.location.href = '/dashboard/table';
       } else {
         alert(data.detail);
       }
@@ -165,7 +177,7 @@ export default function ScanPage() {
       ...nutritionData,
       [field]: field === 'food_name' || field === 'serving_unit'
         ? value
-        : (value ? parseFloat(value) : null)
+        : (value ? parseFloat(value) : '')
     });
   };
 
@@ -190,7 +202,8 @@ export default function ScanPage() {
       <HeaderMegaMenu onLogoClick={reset} />
       <div className="max-w-6xl mx-auto mt-5 px-4">
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          <SideBar />
+          {/* CHANGED: Added navigateOnClick prop to navigate to table page on click */}
+          <SideBar navigateOnClick={true} />
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold text-[var(--dark-green)]">Scan Nutrition Label</h1>
@@ -285,7 +298,7 @@ export default function ScanPage() {
                     placeholder="Enter food name"
                     required
                     radius="md"
-                    value={nutritionData.food_name!}
+                    value={nutritionData.food_name}
                     onChange={(e) => updateField('food_name', e.target.value)}
                     styles={{
                       input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)' },
@@ -299,7 +312,7 @@ export default function ScanPage() {
                         label="Serving Size"
                         type="number"
                         radius="md"
-                        value={nutritionData.serving_size || ''}
+                        value={nutritionData.serving_size}
                         onChange={(e) => updateField('serving_size', e.target.value)}
                         styles={sharedInputStyles}
                       />
@@ -310,7 +323,7 @@ export default function ScanPage() {
                         type="text"
                         placeholder="cup, g, slice"
                         radius="md"
-                        value={nutritionData.serving_unit || ''}
+                        value={nutritionData.serving_unit}
                         onChange={(e) => updateField('serving_unit', e.target.value)}
                         styles={sharedInputStyles}
                       />
@@ -323,7 +336,7 @@ export default function ScanPage() {
                         label="Calories"
                         type="number"
                         radius="md"
-                        value={nutritionData.calories || ''}
+                        value={nutritionData.calories}
                         onChange={(e) => updateField('calories', e.target.value)}
                         styles={sharedInputStyles}
                       />
@@ -333,7 +346,7 @@ export default function ScanPage() {
                         label="Protein (g)"
                         type="number"
                         radius="md"
-                        value={nutritionData.protein ?? ''}
+                        value={nutritionData.protein}
                         onChange={(e) => updateField('protein', e.currentTarget.value)}
                         styles={sharedInputStyles}
                       />
@@ -343,7 +356,7 @@ export default function ScanPage() {
                         label="Carbs (g)"
                         type="number"
                         radius="md"
-                        value={nutritionData.carbs || ''}
+                        value={nutritionData.carbs}
                         onChange={(e) => updateField('carbs', e.target.value)}
                         styles={sharedInputStyles}
                       />
@@ -353,7 +366,7 @@ export default function ScanPage() {
                         label="Sugars (g)"
                         type="number"
                         radius="md"
-                        value={nutritionData.sugars || ''}
+                        value={nutritionData.sugars}
                         onChange={(e) => updateField('sugars', e.target.value)}
                         styles={sharedInputStyles}
                       />

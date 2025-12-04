@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'
 import { FcGoogle } from 'react-icons/fc'
+import Script from 'next/script'
 
 export default function SignInPage() {
   const { signIn, signInWithOAuth, user } = useAuth()
@@ -27,8 +28,9 @@ export default function SignInPage() {
 
     try {
       await signIn(email, password)
-    } catch (err: any) {
-      setError(err.message ?? 'Unable to sign in')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unable to sign in'
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -40,8 +42,9 @@ export default function SignInPage() {
 
     try {
       await signInWithOAuth('google')
-    } catch (err: any) {
-      setError(err.message ?? 'Unable to sign in with Google')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unable to sign in with Google'
+      setError(errorMessage)
     } finally {
       setGoogleLoading(false)
     }
@@ -57,7 +60,7 @@ export default function SignInPage() {
         </Title>
 
         <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px]">
-          Don't have an account yet? <Anchor href='/create-account' className='text-[var(--text-black)]'> Create account </Anchor>
+          Don&apos;t have an account yet? <Anchor href='/create-account' className='text-[var(--text-black)]'> Create account </Anchor>
         </Text>
 
         <Paper
@@ -149,7 +152,7 @@ export default function SignInPage() {
         </Paper>
       </Container>
 
-      <script src="/lines.js"></script>
+      <Script src="/lines.js" strategy="lazyOnload" />
     </div>
   );
 }

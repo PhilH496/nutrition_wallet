@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Checkbox, ScrollArea, Table } from '@mantine/core';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface FoodEntry {
   id: string;
@@ -13,57 +14,102 @@ interface FoodEntry {
   carbs: number;
   sugar: number;
   source: string;
+  consumedAt: string;
 }
 
-const foodHistory: FoodEntry[] = [
-  {
-    id: 'banana',
-    foodName: 'Banana',
-    servingSize: 1,
-    servingUnit: 'medium (118 g)',
-    calories: 105,
-    protein: 1.3,
-    carbs: 27,
-    sugar: 14,
-    source: 'USDA FoodData Central',
-  },
-  {
-    id: 'greek-yogurt',
-    foodName: 'Greek Yogurt',
-    servingSize: 1,
-    servingUnit: 'cup (6 oz)',
-    calories: 100,
-    protein: 17,
-    carbs: 6,
-    sugar: 6,
-    source: 'Brand nutrition label',
-  },
-  {
-    id: 'oatmeal',
-    foodName: 'Oatmeal',
-    servingSize: 0.5,
-    servingUnit: 'cup, dry',
-    calories: 150,
-    protein: 5.4,
-    carbs: 27,
-    sugar: 0.6,
-    source: 'Homemade mix',
-  },
-  {
-    id: 'almonds',
-    foodName: 'Almonds',
-    servingSize: 1,
-    servingUnit: 'ounce (28 g)',
-    calories: 164,
-    protein: 6,
-    carbs: 6.1,
-    sugar: 1.2,
-    source: 'USDA FoodData Central',
-  },
-];
+export interface FoodLogTableProps {
+  selectedDate?: string; // Format: YYYY-MM-DD
+}
 
-export default function FoodLogTable() {
+export default function FoodLogTable({ selectedDate }: FoodLogTableProps) {
   const [selection, setSelection] = useState<string[]>([]);
+  const [foodHistory, setFoodHistory] = useState<FoodEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    async function fetchNutritionLogs() {
+      if (!selectedDate) {
+        setFoodHistory([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.error('No user logged in');
+          setFoodHistory([]);
+          setLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('user_nutrition_log')
+          .select(`
+            log_id,
+            consumed_at,
+            nutrition_facts (
+              nutrition_id,
+              food_name,
+              serving_size,
+              serving_unit,
+              calories,
+              protein,
+              carbs,
+              sugars,
+              source
+            )
+          `)
+          .eq('user_id', user.id)
+          .gte('consumed_at', `${selectedDate}T00:00:00.000Z`)
+          .lt('consumed_at', `${selectedDate}T23:59:59.999Z`)
+          .order('consumed_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching nutrition logs:', error);
+          setFoodHistory([]);
+        } else {
+          const transformedData: FoodEntry[] = (data || []).map((log: any) => {
+            const consumedDate = new Date(log.consumed_at);
+            const formattedTime = consumedDate.toLocaleString('en-US', {
+              month: '2-digit',
+              day: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+
+            return {
+              id: log.log_id,
+              foodName: log.nutrition_facts?.food_name || 'Unknown',
+              servingSize: log.nutrition_facts?.serving_size || 0,
+              servingUnit: log.nutrition_facts?.serving_unit || '',
+              calories: log.nutrition_facts?.calories || 0,
+              protein: log.nutrition_facts?.protein || 0,
+              carbs: log.nutrition_facts?.carbs || 0,
+              sugar: log.nutrition_facts?.sugars || 0,
+              source: log.nutrition_facts?.source || 'Unknown',
+              consumedAt: formattedTime
+            };
+          });
+          
+          setFoodHistory(transformedData);
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        setFoodHistory([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchNutritionLogs();
+  }, [selectedDate, supabase]);
 
   const toggleRow = (id: string) =>
     setSelection((current) =>
@@ -89,10 +135,29 @@ export default function FoodLogTable() {
         <Table.Td>{record.protein.toFixed(1)}</Table.Td>
         <Table.Td>{record.carbs.toFixed(1)}</Table.Td>
         <Table.Td>{record.sugar.toFixed(1)}</Table.Td>
+        <Table.Td>{record.consumedAt}</Table.Td>
         <Table.Td>{record.source}</Table.Td>
       </Table.Tr>
     );
   });
+
+  if (loading) {
+    return (
+      <div className="rounded-[28px] border border-[var(--dark-green)] bg-[var(--light-green)] p-4">
+        <div className="text-center text-[var(--dark-green)] py-8">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!selectedDate || foodHistory.length === 0) {
+    return (
+      <div className="rounded-[28px] border border-[var(--dark-green)] bg-[var(--light-green)] p-4">
+        <div className="text-center text-[var(--dark-green)] py-8">
+          {!selectedDate ? 'Select a date to view nutrition logs' : 'No nutrition logs found for this date'}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-[28px] border border-[var(--dark-green)] bg-[var(--light-green)] p-4">
@@ -100,7 +165,7 @@ export default function FoodLogTable() {
         className="rounded-[20px]"
         styles={{ viewport: { backgroundColor: 'var(--light-green)' } }}
       >
-        <Table miw={900} verticalSpacing="sm" className="bg-transparent text-[var(--dark-green)]">
+        <Table miw={1000} verticalSpacing="sm" className="bg-transparent text-[var(--dark-green)]">
           <Table.Thead className="bg-[var(--light-green)]">
             <Table.Tr>
               <Table.Th w={50}>
@@ -122,6 +187,7 @@ export default function FoodLogTable() {
               <Table.Th>Protein (g)</Table.Th>
               <Table.Th>Carbs (g)</Table.Th>
               <Table.Th>Sugar (g)</Table.Th>
+              <Table.Th>Consumed At</Table.Th>
               <Table.Th>Source</Table.Th>
             </Table.Tr>
           </Table.Thead>
