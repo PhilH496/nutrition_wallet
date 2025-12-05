@@ -133,6 +133,7 @@ async def scan_nutrition_label(
         }
         
     except Exception as e:
+        print("Error in /ocr/scan-label:", e)
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
 
 
@@ -147,7 +148,7 @@ async def save_food_to_database(
     """
     try:
         from ..supabase_client import supabase
-        
+        print(nutrition_data)
         # Extract JWT token for Supabase authentication
         token = credentials.credentials
         
@@ -163,7 +164,7 @@ async def save_food_to_database(
             "protein": nutrition_data.get("protein"),
             "carbs": nutrition_data.get("carbs"),
             "sugars": nutrition_data.get("sugars"),
-            "source": "scan"
+            "source": nutrition_data.get("source")
         }
         
         result = supabase.table("nutrition_facts").insert(food_data).execute()

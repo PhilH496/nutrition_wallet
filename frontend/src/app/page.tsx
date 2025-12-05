@@ -51,7 +51,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div style={{ backgroundColor: 'var(--light-green)', minHeight: '100vh' }}>
+    <div style={{ backgroundColor: 'var(--lighter-green)', minHeight: '100vh' }}>
       <canvas id="animated-canvas" className="fixed inset-0 z-0"></canvas>
 
       <Container size={420} my={40} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -70%)', zIndex: 1 }}>
@@ -59,8 +59,8 @@ export default function SignInPage() {
           Nutrition Wallet
         </Title>
 
-        <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px]">
-          Don&apos;t have an account yet? <Anchor href='/create-account' className='text-[var(--text-black)]'> Create account </Anchor>
+        <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px]  text-center">
+          Don&apos;t have an account yet? <br></br><Anchor href='/create-account' className='text-[var(--text-black)] font-semibold'> Create account </Anchor>
         </Text>
 
         <Paper
@@ -79,7 +79,7 @@ export default function SignInPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             styles={{
-              input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+              input: { backgroundColor: 'var(--foreground)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
               label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
             }}
           />
@@ -92,7 +92,7 @@ export default function SignInPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             styles={{
-              input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+              input: { backgroundColor: 'var(--foreground)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
               label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
             }}
           />
@@ -121,8 +121,8 @@ export default function SignInPage() {
             loading={isSubmitting}
             onClick={handleEmailSignIn}
             styles={{
-              root: { backgroundColor: 'var(--light-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
-              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 700 }
+              root: { backgroundColor: 'var(--forest-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
+              label: { color: 'var(--foreground)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 500 }
             }}
           >
             Sign in
@@ -135,8 +135,8 @@ export default function SignInPage() {
             variant="default"
             onClick={handleGoogleSignIn}
             styles={{
-              root: { backgroundColor: 'var(--light-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
-              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 700 }
+              root: { backgroundColor: 'var(--forest-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
+              label: { color: 'var(--foreground)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 500 }
             }}
           >
             <span className="flex w-full items-center justify-center gap-2">

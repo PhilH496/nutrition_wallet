@@ -7,7 +7,6 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 class SignUpRequest(BaseModel):
     email: EmailStr
     password: str
-    username: str
 
 class SignInRequest(BaseModel):
     email: EmailStr
@@ -19,8 +18,8 @@ async def sign_up(data: SignUpRequest):
     if len(data.password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
-    if len(data.username) < 3 or len(data.username) > 20:
-        raise HTTPException(status_code=400, detail="Username must be 3-20 characters")
+    if len(data.email) < 3 or len(data.email) > 20:
+        raise HTTPException(status_code=400, detail="Email must be 3-20 characters")
     
     try:
         # Create user in Supabase Auth
@@ -28,7 +27,7 @@ async def sign_up(data: SignUpRequest):
             "email": data.email,
             "password": data.password
         })
-        
+
         # Check if user already exists
         if not auth_response.user:
             raise HTTPException(status_code=400, detail="This email address already exists")
@@ -37,12 +36,12 @@ async def sign_up(data: SignUpRequest):
         try:
             supabase.table('profiles').insert({
                 "id": auth_response.user.id,
-                "username": data.username
+                "email": data.email
             }).execute()
         except Exception as profile_error:
             error_str = str(profile_error)
             if "duplicate key" in error_str or "profiles_username_key" in error_str:
-                raise HTTPException(status_code=400, detail="This username is already taken")
+                raise HTTPException(status_code=400, detail="This email is already taken")
             raise HTTPException(status_code=400, detail=f"Failed to create profile: {error_str}")
         
         return {"message": "User created successfully", "user": auth_response.user}

@@ -12,7 +12,9 @@
   --foreground: #ededed;
   --text-black: #222222;
   --dark-green: #677a78;
+  --forest-green: #123814;
   --light-green: #b8cf81;
+  --lighter-green: #d3e3ac;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,7 +23,9 @@
     --foreground: #ededed;
     --text-black: #222222;
     --dark-green: #677a78;
+    --forest-green: #123814;
     --light-green: #b8cf81;
+    --lighter-green: #d3e3ac;
   }
 }
 

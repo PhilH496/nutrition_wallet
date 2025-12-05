@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { HeaderMegaMenu } from '@/components/dashboard/Header';
 import { SideBar } from '@/components/dashboard/SideBar';
-import FoodLogTable from '@/components/dashboard/Table';
+import FoodLogTable, { FoodEntry } from '@/components/dashboard/Table';
 
 export default function FoodTablePage() {
   const searchParams = useSearchParams();
@@ -39,7 +39,7 @@ export default function FoodTablePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--light-green)] py-8">
+    <div className="min-h-screen bg-[var(--lighter-green)] py-8">
       <HeaderMegaMenu />
       <div className="max-w-6xl mx-auto mt-5 px-4">
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
