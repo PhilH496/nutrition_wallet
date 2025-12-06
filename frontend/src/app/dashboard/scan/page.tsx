@@ -267,7 +267,7 @@ export default function ScanPage() {
 
             <div className="space-y-6">
               {/* Camera/Upload Section */}
-              <div className="bg-[var(--light-green)]-lg shadow-md p-6 border border-[var(--dark-green)]">
+              <div className="bg-[var(--foreground)] shadow-md p-6 border border-[var(--dark-green)]">
                 {cameraActive ? (
                   <div className="space-y-4">
                     <div className="relative bg-black rounded-lg overflow-hidden" style={{ minHeight: '400px' }}>

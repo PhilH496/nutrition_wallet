@@ -79,7 +79,7 @@ export default function SignInPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             styles={{
-              input: { backgroundColor: 'var(--foreground)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+              input: { backgroundColor: 'var(--foreground)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif', fontSize: '15px'},
               label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
             }}
           />
@@ -92,7 +92,7 @@ export default function SignInPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             styles={{
-              input: { backgroundColor: 'var(--foreground)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+              input: { backgroundColor: 'var(--foreground)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif', fontSize: '12px' },
               label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
             }}
           />
@@ -106,13 +106,6 @@ export default function SignInPage() {
                 label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
               }}
             />
-            <Anchor
-              component="button"
-              size="sm"
-              style={{ color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }}
-            >
-              Forgot password?
-            </Anchor>
           </Group>
           <Button
             fullWidth
@@ -145,7 +138,7 @@ export default function SignInPage() {
             </span>
           </Button>
           {error && (
-            <div style={{ color: 'text-white', backgroundColor: 'var(--text-black)', borderColor: 'var(--dark-green)', border: '1px solid #FCEE0A', fontFamily: 'GFS Neohellenic, sans-serif' }} className="text-sm rounded-md p-3 mt-3">
+            <div style={{ color: 'text-white', backgroundColor: 'red', borderColor: 'var(--dark-green)', border: '1px solid #FCEE0A', fontFamily: 'GFS Neohellenic, sans-serif' }} className="text-sm rounded-md p-3 mt-3">
               {error}
             </div>
           )}

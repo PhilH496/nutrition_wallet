@@ -26,6 +26,13 @@ interface SupabaseNutritionLog {
   }[] | null;
 }
 
+export interface NutritionGoals {
+  calories: number;
+  protein: number;
+  carbs: number;
+  sugars: number;
+}
+
 interface SidebarDate {
   label: string;
   icon: typeof FaUtensils;
@@ -34,13 +41,31 @@ interface SidebarDate {
 
 interface SideBarProps {
   onDateSelect?: (date: string) => void;
+  onGoalsChange?: (goals: NutritionGoals) => void;
   navigateOnClick?: boolean;
 }
 
-export function SideBar({ onDateSelect, navigateOnClick = false }: SideBarProps) {
+export function SideBar({ onDateSelect, onGoalsChange, navigateOnClick = false }: SideBarProps) {
   const [sidebarData, setSidebarData] = useState<SidebarDate[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClientComponentClient();
+  const [goals, setGoals] = useState<NutritionGoals>({
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    sugars: 0
+  });
+
+  useEffect(() => {
+    if (onGoalsChange) onGoalsChange(goals);
+  }, [goals, onGoalsChange]);
+
+  const updateGoal = (field: keyof NutritionGoals, value: string) => {
+    setGoals(prev => ({
+      ...prev,
+      [field]: value === '' ? '' : parseFloat(value)
+    }));
+  };
 
   useEffect(() => {
     async function fetchUserNutritionDates() {
@@ -127,20 +152,69 @@ export function SideBar({ onDateSelect, navigateOnClick = false }: SideBarProps)
 
   return (
     <nav>
-      <div className='border-b border-[var(--dark-green)]'>
-        <Text className="text-[var(--dark-green)] text-3xl font-bold">
-          History
-        </Text>
+      <div className='border-r border-[var(--dark-green)]'>
+        <div className='mr-2 border-b border-[var(--dark-green)]'>
+          <Text className="text-[var(--dark-green)] text-3xl font-bold">
+            History
+          </Text>
+        </div>
+        <ScrollArea h={500} type="never">
+          {loading ? (
+            <div className="text-center text-[var(--dark-green)] py-4">Loading...</div>
+          ) : sidebarData.length === 0 ? (
+            <div className="text-center text-[var(--dark-green)] py-4">No nutrition logs found</div>
+          ) : (
+            <div>{links}</div>
+          )}
+        </ScrollArea>
+
+        <div className='mr-2 border-b border-[var(--dark-green)]'>
+          <Text className="text-[var(--dark-green)] text-3xl font-bold">
+            Daily Nutrition Goals
+          </Text>
+        </div>
+        <div className=" mt-2 mr-2 p-4 rounded-lg border border-[var(--dark-green)] bg-[var(--lighter-green)] text-[var(--dark-green)]">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-sm">Calories</label>
+              <input
+                type="number"
+                value={goals.calories}
+                onChange={(e) => updateGoal('calories', e.target.value)}
+                className="w-full rounded border border-[var(--dark-green)] p-1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm">Protein (g)</label>
+              <input
+                type="number"
+                value={goals.protein}
+                onChange={(e) => updateGoal('protein', e.target.value)}
+                className="w-full rounded border border-[var(--dark-green)] p-1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm">Carbs (g)</label>
+              <input
+                type="number"
+                value={goals.carbs}
+                onChange={(e) => updateGoal('carbs', e.target.value)}
+                className="w-full rounded border border-[var(--dark-green)] p-1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm">Sugars (g)</label>
+              <input
+                type="number"
+                value={goals.sugars}
+                onChange={(e) => updateGoal('sugars', e.target.value)}
+                className="w-full rounded border border-[var(--dark-green)] p-1"
+              />
+            </div>
+          </div>
+        </div>
       </div>
-      <ScrollArea h={600} type="never">
-        {loading ? (
-          <div className="text-center text-[var(--dark-green)] py-4">Loading...</div>
-        ) : sidebarData.length === 0 ? (
-          <div className="text-center text-[var(--dark-green)] py-4">No nutrition logs found</div>
-        ) : (
-          <div>{links}</div>
-        )}
-      </ScrollArea>
     </nav>
+    
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Checkbox, ScrollArea, Table, TextInput } from '@mantine/core';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { NutritionGoals } from './SideBar';
 
 export interface FoodEntry {
   id: string;
@@ -20,10 +21,11 @@ export interface FoodEntry {
 
 export interface FoodLogTableProps {
   selectedDate?: string; // Format: YYYY-MM-DD
+  nutritionGoals: NutritionGoals;
   onSelectionChange?: (selectedIds: string[], selectedItems: FoodEntry[]) => void;
 }
 
-export default function FoodLogTable({ selectedDate, onSelectionChange, }: FoodLogTableProps) {
+export default function FoodLogTable({ selectedDate, nutritionGoals, onSelectionChange, }: FoodLogTableProps) {
   const [selection, setSelection] = useState<string[]>([]);
   const [foodHistory, setFoodHistory] = useState<FoodEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,6 +168,24 @@ export default function FoodLogTable({ selectedDate, onSelectionChange, }: FoodL
     );
   });
 
+  const totals = foodHistory.reduce(
+    (acc, item) => {
+      acc.calories += item.calories;
+      acc.protein += item.protein;
+      acc.carbs += item.carbs;
+      acc.sugars += item.sugars;
+      return acc;
+    },
+    { calories: 0, protein: 0, carbs: 0, sugars: 0 }
+  );
+
+  const goalsReached = {
+    calories: nutritionGoals ? totals.calories >= nutritionGoals.calories : false,
+    protein: nutritionGoals ? totals.protein >= nutritionGoals.protein : false,
+    carbs: nutritionGoals ? totals.carbs >= nutritionGoals.carbs : false,
+    sugars: nutritionGoals ? totals.sugars >= nutritionGoals.sugars : false
+  };
+
   if (loading) {
     return (
       <div className="rounded-[28px] border border-[var(--dark-green)] bg-[var(--light-green)] p-4">
@@ -212,6 +232,7 @@ export default function FoodLogTable({ selectedDate, onSelectionChange, }: FoodL
         alert('Log(s) deleted successfully!');
         setFoodHistory((prev) => prev.filter((item) => !selection.includes(item.id)));
         setSelection([]);
+
       } else {
         alert(data.detail);
       }
@@ -301,8 +322,8 @@ export default function FoodLogTable({ selectedDate, onSelectionChange, }: FoodL
         Delete
       </button>
       <ScrollArea
-        className="rounded-[20px]"
-        styles={{ viewport: { backgroundColor: 'var(--light-green)' } }}
+        className="rounded-[20px] border border-[var(--dark-green)]"
+        styles={{ viewport: { backgroundColor: 'var(--lighter-green)' } }}
       >
         <Table miw={1000} verticalSpacing="sm" className="bg-transparent text-[var(--dark-green)]">
           <Table.Thead className="bg-[var(--light-green)]">
@@ -331,6 +352,22 @@ export default function FoodLogTable({ selectedDate, onSelectionChange, }: FoodL
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>
+          <Table.Tr className="bg-[var(--light-green)] font-bold">
+            <Table.Td colSpan={4} className="text-right">Totals: </Table.Td>
+            <Table.Td>{totals.calories}</Table.Td>
+            <Table.Td>{totals.protein.toFixed(1)}</Table.Td>
+            <Table.Td>{totals.carbs.toFixed(1)}</Table.Td>
+            <Table.Td>{totals.sugars.toFixed(1)}</Table.Td>
+            <Table.Td colSpan={2}></Table.Td> {}
+          </Table.Tr>
+          <Table.Tr className="bg-[var(--light-green)] font-bold">
+            <Table.Td colSpan={4} className="text-right">Goals Achieved</Table.Td>
+            <Table.Td>{goalsReached.calories ? 'X' : '✓'}</Table.Td>
+            <Table.Td>{goalsReached.protein ? 'X' : '✓'}</Table.Td>
+            <Table.Td>{goalsReached.carbs ? 'X' : '✓'}</Table.Td>
+            <Table.Td>{goalsReached.sugars ? 'X' : '✓'}</Table.Td>
+            <Table.Td colSpan={2}></Table.Td>
+          </Table.Tr>
         </Table>
       </ScrollArea>
 

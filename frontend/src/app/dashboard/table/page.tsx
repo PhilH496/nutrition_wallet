@@ -11,6 +11,12 @@ export default function FoodTablePage() {
   const dateFromUrl = searchParams.get('date');
   
   const [selectedDate, setSelectedDate] = useState<string | null>(dateFromUrl);
+  const [nutritionGoals, setNutritionGoals] = useState({
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    sugars: 0
+  });
   const [sidebarKey, setSidebarKey] = useState(0);
   const [tableKey, setTableKey] = useState(0);
 
@@ -31,11 +37,23 @@ export default function FoodTablePage() {
 
   const formatDisplayDate = (dateString: string | null) => {
     if (!dateString) return null;
-    const date = new Date(dateString);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${month}-${day}-${year}`;
+    const [year, month, day] = dateString.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
+
+    // Format it in Arizona time
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Phoenix",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+
+    const parts = formatter.formatToParts(localDate);
+    const mm = parts.find(p => p.type === "month")!.value;
+    const dd = parts.find(p => p.type === "day")!.value;
+    const yyyy = parts.find(p => p.type === "year")!.value;
+
+    return `${mm}-${dd}-${yyyy}`;
   };
 
   return (
@@ -45,6 +63,7 @@ export default function FoodTablePage() {
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <SideBar 
             onDateSelect={handleDateSelect} 
+            onGoalsChange={setNutritionGoals}
             key={sidebarKey} 
           />
           
@@ -64,6 +83,7 @@ export default function FoodTablePage() {
             <div className="border border-[var(--dark-green)] bg-white/60 p-4 overflow-x-auto">
               <FoodLogTable 
                 selectedDate={selectedDate || undefined} 
+                nutritionGoals = {nutritionGoals}
                 key={tableKey}
               />
             </div>
