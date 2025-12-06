@@ -9,7 +9,7 @@ type OAuthProvider = 'google'
 type AuthContextType = {
   user: User | null
   loading: boolean 
-  signUp: (email: string, password: string, username: string) => Promise<void>
+  signUp: (email: string, password: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signInWithOAuth: (provider: OAuthProvider) => Promise<void>
   signOut: () => Promise<void>
@@ -63,15 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [initialCheckDone])
 
-  const signUp = async (email: string, password: string, username: string) => {
+  const signUp = async (email: string, password: string) => {
     // Clear any existing auth state FIRST
     localStorage.removeItem('token')
     await supabase.auth.signOut()
+
+    console.log(JSON.stringify({ email, password }))
     
     const response = await fetch(`${API_URL}/api/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, username }),
+      body: JSON.stringify({ email, password }),
     })
 
     if (!response.ok) {

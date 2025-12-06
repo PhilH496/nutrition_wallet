@@ -7,14 +7,15 @@ import { TextInput } from '@mantine/core';
 import { HeaderMegaMenu } from '@/components/dashboard/Header';
 import { SideBar } from '@/components/dashboard/SideBar';
 
+// CHANGED: All fields default to empty string or 0 to avoid null issues
 interface NutritionData {
-  food_name: string | null;
-  serving_size: number | null;
-  serving_unit: string | null;
-  calories: number | null;
-  protein: number | null;
-  carbs: number | null;
-  sugars: number | null;
+  food_name: string;
+  serving_size: number | string;
+  serving_unit: string;
+  calories: number | string;
+  protein: number | string;
+  carbs: number | string;
+  sugars: number | string;
 }
 
 export default function ScanPage() {
@@ -22,7 +23,17 @@ export default function ScanPage() {
   const [preview, setPreview] = useState<string>('');
   const [scanning, setScanning] = useState(false);
   const [saving, setSaving] = useState(false);
+  // CHANGED: Initialize with empty values instead of null
   const [nutritionData, setNutritionData] = useState<NutritionData | null>(null);
+  const [tempNutritionData, setTempNutritionData] = useState<NutritionData>({
+    food_name: '',
+    serving_size: '',
+    serving_unit: '',
+    calories: '',
+    protein: '',
+    carbs: '',
+    sugars: '',
+  });
   const [rawText, setRawText] = useState<string>('');
   const [cameraActive, setCameraActive] = useState(false);
 
@@ -113,7 +124,16 @@ export default function ScanPage() {
 
       const data = await response.json();
       if (data.success) {
-        setNutritionData(data.nutrition_data);
+        // CHANGED: Convert null values to empty strings to avoid React warnings
+        setNutritionData({
+          food_name: data.nutrition_data.food_name ?? '',
+          serving_size: data.nutrition_data.serving_size ?? '',
+          serving_unit: data.nutrition_data.serving_unit ?? '',
+          calories: data.nutrition_data.calories ?? '',
+          protein: data.nutrition_data.protein ?? '',
+          carbs: data.nutrition_data.carbs ?? '',
+          sugars: data.nutrition_data.sugars ?? '',
+        });
         setRawText(data.raw_text);
       } else {
         alert(data.detail);
@@ -125,7 +145,7 @@ export default function ScanPage() {
     }
   };
 
-  const handleSave = async () => {
+  const handleScanSave = async () => {
     if (!nutritionData?.food_name) {
       alert('Enter a food name before saving.')
       return;
@@ -141,14 +161,50 @@ export default function ScanPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(nutritionData)
+        body: JSON.stringify({...nutritionData, source: "scan"})
       });
 
       const data = await response.json();
       if (data.success) {
         alert('Food saved successfully!');
         reset();
-        router.refresh();
+        // CHANGED: Navigate to table page and force full page reload to refresh data
+        window.location.href = '/dashboard/table';
+      } else {
+        alert(data.detail);
+      }
+    } catch (error) {
+      alert('Error saving food');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleManualSave = async () => {
+    if (!tempNutritionData?.food_name) {
+      alert('Enter a food name before saving.')
+      return;
+    }
+    if (!tempNutritionData) return;
+    setSaving(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8000/ocr/save-food', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({...tempNutritionData, source: "manual"})
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('Food saved successfully!');
+        reset();
+        // CHANGED: Navigate to table page and force full page reload to refresh data
+        window.location.href = '/dashboard/scan';
       } else {
         alert(data.detail);
       }
@@ -165,8 +221,19 @@ export default function ScanPage() {
       ...nutritionData,
       [field]: field === 'food_name' || field === 'serving_unit'
         ? value
-        : (value ? parseFloat(value) : null)
+        : (value ? parseFloat(value) : '')
     });
+
+    console.log(nutritionData)
+  };
+
+  const updateManualField = (field: keyof NutritionData, value: string) => {
+    setTempNutritionData(prev => ({
+      ...prev,
+      [field]: field === 'food_name' || field === 'serving_unit'
+        ? value
+        : (value ? parseFloat(value) : '')
+    }));
   };
 
   const sharedInputStyles = {
@@ -186,11 +253,12 @@ export default function ScanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--light-green)] py-8">
+    <div className="min-h-screen bg-[var(--lighter-green)] py-8">
       <HeaderMegaMenu onLogoClick={reset} />
       <div className="max-w-6xl mx-auto mt-5 px-4">
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          <SideBar />
+          {/* CHANGED: Added navigateOnClick prop to navigate to table page on click */}
+          <SideBar navigateOnClick={true} />
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold text-[var(--dark-green)]">Scan Nutrition Label</h1>
@@ -199,7 +267,7 @@ export default function ScanPage() {
 
             <div className="space-y-6">
               {/* Camera/Upload Section */}
-              <div className="bg-[var(--light-green)]-lg shadow-md p-6 border border-[var(--dark-green)]">
+              <div className="bg-[var(--foreground)] shadow-md p-6 border border-[var(--dark-green)]">
                 {cameraActive ? (
                   <div className="space-y-4">
                     <div className="relative bg-black rounded-lg overflow-hidden" style={{ minHeight: '400px' }}>
@@ -209,13 +277,13 @@ export default function ScanPage() {
                     <div className="flex gap-3">
                       <button
                         onClick={capturePhoto}
-                        className="flex-1 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white font-medium transition"
+                        className="flex-1 bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] px-6 py-3 rounded-lg hover:bg-white hover:text-[var(--dark-green)] font-medium transition"
                       >
                         Capture Photo
                       </button>
                       <button
                         onClick={stopCamera}
-                        className="px-6 py-3 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] rounded-lg hover:bg-white font-medium transition"
+                        className="px-6 py-3 bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] rounded-lg hover:bg-white hover:text-[var(--dark-green)] font-medium transition"
                       >
                         Cancel
                       </button>
@@ -227,13 +295,13 @@ export default function ScanPage() {
                     <div className="flex gap-3">
                       <button
                         onClick={startCamera}
-                        className="flex-1 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] font-medium py-2 rounded-lg hover:bg-white transition"
+                        className="flex-1 bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] font-medium py-2 rounded-lg hover:bg-white hover:text-[var(--dark-green)] transition"
                       >
                         Retake
                       </button>
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex-1 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] font-medium py-2 rounded-lg hover:bg-white transition"
+                        className="flex-1 bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] font-medium py-2 rounded-lg hover:bg-white hover:text-[var(--dark-green)] transition"
                       >
                         Upload Different
                       </button>
@@ -247,13 +315,13 @@ export default function ScanPage() {
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <button
                         onClick={startCamera}
-                        className="bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white"
+                        className="bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] px-6 py-3 rounded-lg hover:bg-white hover:text-[var(--dark-green)]"
                       >
                         Take Photo
                       </button>
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white"
+                        className="bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] px-6 py-3 rounded-lg hover:bg-white hover:text-[var(--dark-green)]"
                       >
                         Upload Photo
                       </button>
@@ -267,7 +335,7 @@ export default function ScanPage() {
                   <button
                     onClick={handleScan}
                     disabled={scanning}
-                    className="w-full mt-6 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full mt-6 bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] px-6 py-3 rounded-lg hover:bg-white hover:text-[var(--dark-green)] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {scanning ? 'Scanning...' : 'Scan Label'}
                   </button>
@@ -285,7 +353,7 @@ export default function ScanPage() {
                     placeholder="Enter food name"
                     required
                     radius="md"
-                    value={nutritionData.food_name!}
+                    value={nutritionData.food_name}
                     onChange={(e) => updateField('food_name', e.target.value)}
                     styles={{
                       input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)' },
@@ -299,7 +367,7 @@ export default function ScanPage() {
                         label="Serving Size"
                         type="number"
                         radius="md"
-                        value={nutritionData.serving_size || ''}
+                        value={nutritionData.serving_size}
                         onChange={(e) => updateField('serving_size', e.target.value)}
                         styles={sharedInputStyles}
                       />
@@ -310,7 +378,7 @@ export default function ScanPage() {
                         type="text"
                         placeholder="cup, g, slice"
                         radius="md"
-                        value={nutritionData.serving_unit || ''}
+                        value={nutritionData.serving_unit}
                         onChange={(e) => updateField('serving_unit', e.target.value)}
                         styles={sharedInputStyles}
                       />
@@ -323,7 +391,7 @@ export default function ScanPage() {
                         label="Calories"
                         type="number"
                         radius="md"
-                        value={nutritionData.calories || ''}
+                        value={nutritionData.calories}
                         onChange={(e) => updateField('calories', e.target.value)}
                         styles={sharedInputStyles}
                       />
@@ -333,7 +401,7 @@ export default function ScanPage() {
                         label="Protein (g)"
                         type="number"
                         radius="md"
-                        value={nutritionData.protein ?? ''}
+                        value={nutritionData.protein}
                         onChange={(e) => updateField('protein', e.currentTarget.value)}
                         styles={sharedInputStyles}
                       />
@@ -343,7 +411,7 @@ export default function ScanPage() {
                         label="Carbs (g)"
                         type="number"
                         radius="md"
-                        value={nutritionData.carbs || ''}
+                        value={nutritionData.carbs}
                         onChange={(e) => updateField('carbs', e.target.value)}
                         styles={sharedInputStyles}
                       />
@@ -353,7 +421,7 @@ export default function ScanPage() {
                         label="Sugars (g)"
                         type="number"
                         radius="md"
-                        value={nutritionData.sugars || ''}
+                        value={nutritionData.sugars}
                         onChange={(e) => updateField('sugars', e.target.value)}
                         styles={sharedInputStyles}
                       />
@@ -362,15 +430,15 @@ export default function ScanPage() {
 
                   <div className="flex gap-4 pt-4">
                     <button
-                      onClick={handleSave}
+                      onClick={handleScanSave}
                       disabled={saving}
-                      className="flex-1 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed font-medium transition"
+                      className="flex-1 bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] px-6 py-3 rounded-lg hover:bg-white hover:text-[var(--dark-green)] disabled:opacity-50 disabled:cursor-not-allowed font-medium transition"
                     >
                       {saving ? 'Saving...' : 'Save'}
                     </button>
                     <button
                       onClick={reset}
-                      className="flex-1 bg-[var(--light-green)] border border-[var(--dark-green)] text-[var(--dark-green)] px-6 py-3 rounded-lg hover:bg-white font-medium transition"
+                      className="flex-1 bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] px-6 py-3 rounded-lg hover:bg-white hover:text-[var(--dark-green)] font-medium transition"
                     >
                       Cancel
                     </button>
@@ -389,6 +457,101 @@ export default function ScanPage() {
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Manual Nutrition Entry */}
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold text-[var(--dark-green)]">Manually Enter Nutrition Label</h1>
+            </div>
+            <div className="bg-[var(--light-green)]-lg shadow-md p-6 space-y-4 border border-[var(--dark-green)]">
+              <TextInput
+                label="Food Name"
+                placeholder="Enter food name"
+                required
+                radius="md"
+                onChange={(e) => updateManualField('food_name', e.target.value)}
+                styles={{
+                  input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)' },
+                  label: { color: 'var(--text-black)' }
+                }}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <TextInput
+                    label="Serving Size"
+                    type="number"
+                    radius="md"
+                    onChange={(e) => updateManualField('serving_size', e.target.value)}
+                    styles={sharedInputStyles}
+                  />
+                </div>
+                <div>
+                  <TextInput
+                    label="Serving Unit"
+                    type="text"
+                    placeholder="cup, g, slice"
+                    radius="md"
+                    onChange={(e) => updateManualField('serving_unit', e.target.value)}
+                    styles={sharedInputStyles}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--dark-green)]">
+                <div>
+                  <TextInput
+                    label="Calories"
+                    type="number"
+                    radius="md"
+                    onChange={(e) => updateManualField('calories', e.target.value)}
+                    styles={sharedInputStyles}
+                  />
+                </div>
+                <div>
+                  <TextInput
+                    label="Protein (g)"
+                    type="number"
+                    radius="md"
+                    onChange={(e) => updateManualField('protein', e.currentTarget.value)}
+                    styles={sharedInputStyles}
+                  />
+                </div>
+                <div>
+                  <TextInput
+                    label="Carbs (g)"
+                    type="number"
+                    radius="md"
+                    onChange={(e) => updateManualField('carbs', e.target.value)}
+                    styles={sharedInputStyles}
+                  />
+                </div>
+                <div>
+                  <TextInput
+                    label="Sugars (g)"
+                    type="number"
+                    radius="md"
+                    onChange={(e) => updateManualField('sugars', e.target.value)}
+                    styles={sharedInputStyles}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  onClick={handleManualSave}
+                  disabled={saving}
+                  className="flex-1 bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] px-6 py-3 rounded-lg hover:bg-white hover:text-[var(--dark-green)] disabled:opacity-50 disabled:cursor-not-allowed font-medium transition"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={reset}
+                  className="flex-1 bg-[var(--forest-green)] border border-[var(--dark-green)] text-[var(--foreground)] px-6 py-3 rounded-lg hover:bg-white hover:text-[var(--dark-green)] font-medium transition"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

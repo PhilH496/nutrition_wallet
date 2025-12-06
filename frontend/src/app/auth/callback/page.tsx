@@ -37,7 +37,7 @@ export default function OAuthCallbackPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--light-green)]">
       <Container size={420}>
-        <Paper withBorder shadow="sm" p={22} radius="md" className="bg-[var(--light-green)] border-[var(--dark-green)]">
+        <Paper withBorder shadow="sm" p={22} radius="md" className="bg-[var(--foreground)] border-[var(--dark-green)]">
           <Title ta="center" className="gfs-neohellenic-bold text-[var(--text-black)]">
             Finalizing sign in
           </Title>

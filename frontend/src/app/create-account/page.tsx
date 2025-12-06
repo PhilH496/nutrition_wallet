@@ -9,7 +9,6 @@ export default function CreateAccountPage() {
     const [isSignUp, setIsSignUp] = useState(false)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [username, setUsername] = useState('')
     const [error, setError] = useState('')
     const { signUp, user } = useAuth()
     const router = useRouter()
@@ -29,11 +28,12 @@ export default function CreateAccountPage() {
         }
 
         try {
-            await signUp(email, password, username)
+            console.log(email)
+            await signUp(email, password)
         } catch (err: any) {
             let errorMessage = 'Authentication failed'
             if (err.message?.includes('duplicate key')) {
-                errorMessage = 'Username or email already exists'
+                errorMessage = 'Email already exists'
             } else if (err.message?.includes('already exists')) {
                 errorMessage = err.message
             } else if (err.message?.includes('already taken')) {
@@ -52,7 +52,7 @@ export default function CreateAccountPage() {
     }
 
     return (
-        <div style={{ backgroundColor: 'var(--light-green)', minHeight: '100vh' }}>
+        <div style={{ backgroundColor: 'var(--lighter-green)', minHeight: '100vh' }}>
             <canvas id="animated-canvas" className="fixed inset-0 z-0"></canvas>
 
             <Container
@@ -73,6 +73,7 @@ export default function CreateAccountPage() {
 
                 <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px] text-center">
                     Already have an account?{' '}
+                    <br></br>
                     <Anchor href="/" className="text-[var(--text-black)] font-semibold">
                         Sign in
                     </Anchor>
@@ -98,22 +99,9 @@ export default function CreateAccountPage() {
                             minLength={3}
                             maxLength={20}
                             styles={{
-                                input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+                                input: { backgroundColor: 'var(--foreground)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
                                 label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
                               }}
-                        />
-                        <TextInput
-                            label="Enter Username"
-                            required
-                            placeholder="awsomesauce123"
-                            radius="md"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            maxLength={20}
-                            styles={{
-                                input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
-                                label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
-                            }}
                         />
                         <PasswordInput
                             label="Create Password"
@@ -125,7 +113,7 @@ export default function CreateAccountPage() {
                             minLength={3}
                             maxLength={30}
                             styles={{
-                                input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+                                input: { backgroundColor: 'var(--foreground)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
                                 label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
                             }}
                         />
@@ -142,13 +130,13 @@ export default function CreateAccountPage() {
                             onClick={() => setIsSignUp(!isSignUp)}
                             styles={{
                                 root: {
-                                    backgroundColor: 'var(--light-green)',
+                                    backgroundColor: 'var(--forest-green)',
                                     color: 'var(--text-black)',
                                     borderColor: 'var(--dark-green)',
                                     borderWidth: 1,
                                 },
                                 label: {
-                                    color: 'var(--text-black)',
+                                    color: 'var(--foreground)',
                                     fontFamily: 'GFS Neohellenic, sans-serif',
                                     fontWeight: 700,
                                 },

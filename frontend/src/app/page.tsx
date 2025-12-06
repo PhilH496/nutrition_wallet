@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'
 import { FcGoogle } from 'react-icons/fc'
+import Script from 'next/script'
 
 export default function SignInPage() {
   const { signIn, signInWithOAuth, user } = useAuth()
@@ -27,8 +28,9 @@ export default function SignInPage() {
 
     try {
       await signIn(email, password)
-    } catch (err: any) {
-      setError(err.message ?? 'Unable to sign in')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unable to sign in'
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -40,15 +42,16 @@ export default function SignInPage() {
 
     try {
       await signInWithOAuth('google')
-    } catch (err: any) {
-      setError(err.message ?? 'Unable to sign in with Google')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unable to sign in with Google'
+      setError(errorMessage)
     } finally {
       setGoogleLoading(false)
     }
   }
 
   return (
-    <div style={{ backgroundColor: 'var(--light-green)', minHeight: '100vh' }}>
+    <div style={{ backgroundColor: 'var(--lighter-green)', minHeight: '100vh' }}>
       <canvas id="animated-canvas" className="fixed inset-0 z-0"></canvas>
 
       <Container size={420} my={40} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -70%)', zIndex: 1 }}>
@@ -56,8 +59,8 @@ export default function SignInPage() {
           Nutrition Wallet
         </Title>
 
-        <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px]">
-          Don't have an account yet? <Anchor href='/create-account' className='text-[var(--text-black)]'> Create account </Anchor>
+        <Text className="gfs-neohellenic-regular text-[var(--text-black)] mt-[5px]  text-center">
+          Don&apos;t have an account yet? <br></br><Anchor href='/create-account' className='text-[var(--text-black)] font-semibold'> Create account </Anchor>
         </Text>
 
         <Paper
@@ -76,7 +79,7 @@ export default function SignInPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             styles={{
-              input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+              input: { backgroundColor: 'var(--foreground)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif', fontSize: '15px'},
               label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
             }}
           />
@@ -89,7 +92,7 @@ export default function SignInPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             styles={{
-              input: { backgroundColor: 'var(--light-green)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif' },
+              input: { backgroundColor: 'var(--foreground)', color: 'text-white', borderColor: 'var(--dark-green)', fontFamily: 'GFS Neohellenic, sans-serif', fontSize: '12px' },
               label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
             }}
           />
@@ -103,13 +106,6 @@ export default function SignInPage() {
                 label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }
               }}
             />
-            <Anchor
-              component="button"
-              size="sm"
-              style={{ color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif' }}
-            >
-              Forgot password?
-            </Anchor>
           </Group>
           <Button
             fullWidth
@@ -118,8 +114,8 @@ export default function SignInPage() {
             loading={isSubmitting}
             onClick={handleEmailSignIn}
             styles={{
-              root: { backgroundColor: 'var(--light-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
-              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 700 }
+              root: { backgroundColor: 'var(--forest-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
+              label: { color: 'var(--foreground)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 500 }
             }}
           >
             Sign in
@@ -132,8 +128,8 @@ export default function SignInPage() {
             variant="default"
             onClick={handleGoogleSignIn}
             styles={{
-              root: { backgroundColor: 'var(--light-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
-              label: { color: 'var(--text-black)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 700 }
+              root: { backgroundColor: 'var(--forest-green)', color: 'var(--text-black)', borderColor: "var(--dark-green)" },
+              label: { color: 'var(--foreground)', fontFamily: 'GFS Neohellenic, sans-serif', fontWeight: 500 }
             }}
           >
             <span className="flex w-full items-center justify-center gap-2">
@@ -142,14 +138,14 @@ export default function SignInPage() {
             </span>
           </Button>
           {error && (
-            <div style={{ color: 'text-white', backgroundColor: 'var(--text-black)', borderColor: 'var(--dark-green)', border: '1px solid #FCEE0A', fontFamily: 'GFS Neohellenic, sans-serif' }} className="text-sm rounded-md p-3 mt-3">
+            <div style={{ color: 'text-white', backgroundColor: 'red', borderColor: 'var(--dark-green)', border: '1px solid #FCEE0A', fontFamily: 'GFS Neohellenic, sans-serif' }} className="text-sm rounded-md p-3 mt-3">
               {error}
             </div>
           )}
         </Paper>
       </Container>
 
-      <script src="/lines.js"></script>
+      <Script src="/lines.js" strategy="lazyOnload" />
     </div>
   );
 }

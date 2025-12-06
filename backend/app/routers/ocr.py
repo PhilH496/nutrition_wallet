@@ -7,6 +7,7 @@ from typing import Dict, Any
 import time
 import re
 import io
+from datetime import datetime
 from ..config import settings
 from ..supabase_client import get_current_user, security
 
@@ -53,7 +54,23 @@ def parse_nutrition_info(text: str) -> Dict[str, Any]:
                 nutrition_data[key] = match.group(1).strip()
     
     return nutrition_data
+async def log_user_nutrition(nutrition_fact_id: str, user, credentials, consumed_at=None):
+    """Create log entry for this user + nutrition fact"""
+    from ..supabase_client import supabase
 
+    token = credentials.credentials
+    supabase.postgrest.auth(token)
+
+    if consumed_at is None:
+        consumed_at = datetime.utcnow().isoformat()
+
+    result = supabase.table("user_nutrition_log").insert({
+        "user_id": user["id"],
+        "nutrition_fact_id": nutrition_fact_id,
+        "consumed_at": consumed_at,    # None → DB default NOW()
+    }).execute()
+
+    return {"success": True, "data": result.data}
 
 @router.post("/scan-label")
 async def scan_nutrition_label(
@@ -116,6 +133,7 @@ async def scan_nutrition_label(
         }
         
     except Exception as e:
+        print("Error in /ocr/scan-label:", e)
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
 
 
@@ -130,7 +148,7 @@ async def save_food_to_database(
     """
     try:
         from ..supabase_client import supabase
-        
+        print(nutrition_data)
         # Extract JWT token for Supabase authentication
         token = credentials.credentials
         
@@ -146,11 +164,22 @@ async def save_food_to_database(
             "protein": nutrition_data.get("protein"),
             "carbs": nutrition_data.get("carbs"),
             "sugars": nutrition_data.get("sugars"),
-            "source": "scan"
+            "source": nutrition_data.get("source")
         }
         
         result = supabase.table("nutrition_facts").insert(food_data).execute()
-        
+
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Failed to insert nutrition_facts")
+
+        nutrition_id = result.data[0]["nutrition_id"]
+
+        log_result = await log_user_nutrition(
+            nutrition_fact_id=nutrition_id,
+            user=user,
+            credentials=credentials,
+            consumed_at=None
+        )
         return {
             "success": True,
             "message": "Food saved successfully",

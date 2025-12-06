@@ -24,6 +24,7 @@ frontend/next-env.d.ts
 # backend dependencies
 backend/.venv/
 backend/env/
+backend/*venv*/
 
 # pycache
 __pycache__/

@@ -1,28 +1,40 @@
 'use client';
-
 import { useState } from 'react';
 import { IconCalendarStats, IconChevronRight } from '@tabler/icons-react';
-import { Box, Collapse, Group, Text, ThemeIcon, UnstyledButton } from '@mantine/core';
+import { Box, Collapse, Group, ThemeIcon, UnstyledButton } from '@mantine/core';
 
 interface LinksGroupProps {
-  icon: React.FC<any>;
+  icon: React.ComponentType<{ size?: number | string }>;
   label: string;
   initiallyOpened?: boolean;
-  links?: { label: string; link: string }[];
+  links?: { label: string; link: string; date?: string }[];
+  onDateSelect?: (date: string) => void;
+  navigateOnClick?: boolean;
 }
 
-export function LinksGroup({ icon: Icon, label, initiallyOpened, links }: LinksGroupProps) {
+export function LinksGroup({ icon: Icon, label, initiallyOpened, links, onDateSelect, navigateOnClick = false }: LinksGroupProps) {
   const hasLinks = Array.isArray(links);
   const [opened, setOpened] = useState(initiallyOpened || false);
+  
   const items = (hasLinks ? links : []).map((link) => (
-    <Text<'a'>
-      component="a"
-      className="font-medium block text-sm text-slate-600 dark:text-slate-100 px-3 py-2 pl-4 ml-4 border-l border-slate-200 dark:border-slate-600 transition-colors duration-150 ease-in-out hover:bg-transparent dark:hover:bg-transparent hover:text-slate-900 dark:hover:text-slate-100"
-      href={link.link}
+    <button
       key={link.label}
+      type="button"
+      className="font-medium block text-sm text-slate-600 dark:text-slate-100 px-3 py-2 pl-4 ml-4 border-l border-slate-200 dark:border-slate-600 transition-colors duration-150 ease-in-out hover:bg-transparent dark:hover:bg-transparent hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer bg-transparent border-0 w-full text-left truncate"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (navigateOnClick && link.date) {
+          window.location.href = `/dashboard/table?date=${link.date}`;
+        } else if (!navigateOnClick && link.date && onDateSelect) {
+          onDateSelect(link.date);
+        }
+      }}
+      title={link.label}
     >
       {link.label}
-    </Text>
+    </button>
   ));
 
   return (
